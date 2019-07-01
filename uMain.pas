@@ -36,7 +36,6 @@ type
 
     plMainLeft: TPanel;
     buttonSettings: TAdvGlassButton;
-    Button1: TButton;
     plMainTop: TPanel;
     plMainClient: TPanel;
     StatusBar1: TStatusBar;
@@ -98,6 +97,9 @@ type
     buttonPatientSave: TAdvGlassButton;
     buttonPatientCancel: TAdvGlassButton;
     buttonPatientModify: TAdvGlassButton;
+    pageMain: TAdvPageControl;
+    tabMain: TAdvTabSheet;
+    tabLog: TAdvTabSheet;
     procedure tabEmployeeShow(Sender: TObject);
     procedure tabTreeShow(Sender: TObject);
     procedure treeNodeRootAfterSelectNode(Sender: TObject;
@@ -109,6 +111,8 @@ type
     function aaaIsEmptyText(s, msg: String): Boolean;
     procedure aaaModifyStyle(s: ShortInt);
     procedure aaaPatientFieldClear;
+    procedure aaaPatientRefresh;
+    procedure aaaPatientFilter(FilterStr: String; FCol:SmallInt);
 
     procedure treeNodeMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer);
@@ -132,6 +136,7 @@ type
     procedure editFNameRightButtonClick(Sender: TObject);
     procedure buttonPatientSaveClick(Sender: TObject);
     procedure buttonPatientCancelClick(Sender: TObject);
+    procedure editFNameChange(Sender: TObject);
   private
     { Private declarations }
     insertParentId, insertContent, insertInitExam, insertEnable: TStrings;
@@ -375,6 +380,107 @@ begin
   memoNotes.Lines.Clear;
 end;
 
+// обновляем/перечитываем таблицу пациентов
+procedure TfmMain.aaaPatientRefresh;
+var
+  OriginalJSONObject: TJSONObject;
+  joItems: TJSONArray;
+  joItem: TJSONObject;
+
+  JSONString: String;
+  error: Boolean;
+  i: Integer;
+  j: Integer;
+
+  col: TStrings;
+begin
+  gridPatient.BeginUpdate;
+  with dmDataModule do
+  begin
+    RESTRequest1.Method := rmGET;
+    RESTRequest1.Resource := 'patient';
+    RESTRequest1.Params.Clear;
+    RESTRequest1.Execute;
+    JSONString := RESTResponse1.JSONValue.ToString;
+    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+  end;
+
+  error := OriginalJSONObject.GetValue('error') is TJSONTrue;
+  if error = false then
+  begin
+    joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
+
+    gridPatient.RowCount := joItems.Count + 1;
+    for i := 0 to joItems.Count - 1 do
+    begin
+      joItem := joItems.Items[i] as TJSONObject;
+
+      gridPatient.Cells[GRID_PATIENT_FNAME, i + 1] := joItem.GetValue(JSON_FNAME).Value;
+
+      gridPatient.Cells[GRID_PATIENT_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
+
+      gridPatient.Cells[GRID_PATIENT_LNAME, i + 1] := joItem.GetValue(JSON_LNAME).Value;
+
+      gridPatient.Cells[GRID_PATIENT_BIRTHDAY, i + 1] :=
+        joItem.GetValue(JSON_BIRTHDAY).Value;
+
+      if joItem.GetValue(JSON_SEX).Value = '1' then
+        gridPatient.Cells[GRID_PATIENT_SEX, i + 1] := TEXT_MEN
+      else
+        gridPatient.Cells[GRID_PATIENT_SEX, i + 1] := TEXT_WOMEN;
+
+      gridPatient.Cells[GRID_PATIENT_PROFF, i + 1] := joItem.GetValue(JSON_PROFF).Value;
+
+      gridPatient.Cells[GRID_PATIENT_ADDRESS1, i + 1] :=
+        joItem.GetValue(JSON_ADDRESS1).Value;
+
+      gridPatient.Cells[GRID_PATIENT_ADDRESS2, i + 1] :=
+        joItem.GetValue(JSON_ADDRESS2).Value;
+
+      gridPatient.Cells[GRID_PATIENT_ADDRESS3, i + 1] :=
+        joItem.GetValue(JSON_ADDRESS3).Value;
+
+      gridPatient.Cells[GRID_PATIENT_PHONE1, i + 1] := joItem.GetValue(JSON_PHONE1).Value;
+
+      gridPatient.Cells[GRID_PATIENT_PHONE2, i + 1] := joItem.GetValue(JSON_PHONE2).Value;
+
+      gridPatient.Cells[GRID_PATIENT_NOTES, i + 1] := joItem.GetValue(JSON_NOTES).Value;
+
+      gridPatient.Cells[GRID_PATIENT_CREATED, i + 1] :=
+        joItem.GetValue(JSON_CREATED).Value;
+      // скрытый столбей, содержжит id
+      gridPatient.Cells[GRID_PATIENT_ID, i + 1] := joItem.GetValue('id').Value;
+    end;
+  end;
+  FreeAndNil(OriginalJSONObject);
+  // gridPatient.AutoSize:=true;
+  gridPatient.AutoSizeColumns(false);
+  if gridPatient.ColWidths[GRID_PATIENT_FNAME] < 100 then
+    gridPatient.ColWidths[GRID_PATIENT_FNAME] := 100;
+  if gridPatient.ColWidths[GRID_PATIENT_NAME] < 100 then
+    gridPatient.ColWidths[GRID_PATIENT_NAME] := 100;
+  if gridPatient.ColWidths[GRID_PATIENT_LNAME] < 100 then
+    gridPatient.ColWidths[GRID_PATIENT_LNAME] := 100;
+  // gridPatient.ColWidths[GRID_PATIENT_NOTES]:=200;
+  gridPatient.ColWidths[GRID_PATIENT_NOTES] := 150;
+  gridPatient.EndUpdate;
+end;
+
+procedure TfmMain.aaaPatientFilter(FilterStr: String; FCol:SmallInt);
+begin
+  gridPatient.FilterActive := false;
+  gridPatient.Filter.Clear;
+
+  with gridPatient.Filter.Add do
+  begin
+    Condition := FilterStr;
+    Column := FCol;
+    Operation := foNone;
+  end;
+
+  gridPatient.FilterActive := true;
+end;
+
 procedure TfmMain.buttonPatientModifyClick(Sender: TObject);
 var
   fmt: TFormatSettings;
@@ -435,7 +541,10 @@ end;
 
 procedure TfmMain.buttonPatientSaveClick(Sender: TObject);
 var
+  OriginalJSONObject: TJSONObject;
   JSONString: String;
+
+  error: Boolean;
   fmt: TFormatSettings;
 begin
   // TODO проверка на валидность
@@ -447,8 +556,10 @@ begin
     Exit;
   end;
 
-  if buttonPatientInsert.Down then
-    with dmDataModule do
+  with dmDataModule do
+  begin
+    if buttonPatientInsert.Down then
+
     begin
       // Добавление записей
       RESTRequest1.Method := rmPOST;
@@ -492,11 +603,9 @@ begin
         [poDoNotEncode]);
 
       RESTRequest1.Execute;
-      JSONString := RESTResponse1.JSONValue.ToString;
     end;
 
-  if buttonPatientModify.Down then
-    with dmDataModule do
+    if buttonPatientModify.Down then
     begin
       // Редактирование записи
       RESTRequest1.Method := rmPUT;
@@ -504,7 +613,6 @@ begin
         gridPatient.SelectedRow[0]];
 
       RESTRequest1.Params.Clear;
-      // RESTRequest1.Params.AddHeader('Connection', 'keep-alive');
       if editFName.Modified then
         RESTRequest1.Params.AddItem(JSON_FNAME,
           UTF8EncodeToShortString(Trim(editFName.Text)), pkGETorPOST, [poDoNotEncode]);
@@ -555,9 +663,23 @@ begin
 
       RESTRequest1.Execute;
 
-
-      // JSONString := RESTResponse1.JSONValue.ToString;
     end;
+    JSONString := RESTResponse1.JSONValue.ToString;
+    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+
+    error := OriginalJSONObject.GetValue('error') is TJSONTrue;
+    if error = false then
+    begin
+      ShowMessage('Сохранение прошло успешно');
+      plPatientInsert.Visible := false;
+      aaaPatientRefresh;
+    end
+    else
+      ShowMessage('Ошибка при сохранении: ' + OriginalJSONObject.GetValue
+        ('response').Value);
+
+  end;
+  FreeAndNil(OriginalJSONObject);
 end;
 
 procedure TfmMain.buttonPatientInsertClick(Sender: TObject);
@@ -725,94 +847,16 @@ end;
 
 procedure TfmMain.buttonPatientCancelClick(Sender: TObject);
 begin
-
-  fmMain.Caption := editPhone1.Text;
+  buttonPatientInsert.Down:=false;
+  buttonPatientModify.Down:=false;
+  plPatientInsert.Visible:=false;
 end;
 
 procedure TfmMain.buttonPatientClick(Sender: TObject);
-var
-  OriginalJSONObject: TJSONObject;
-  joItems: TJSONArray;
-  joItem: TJSONObject;
-  // jValue:TJSONValue;
-  JSONString: String;
-  error: Boolean;
-  i: Integer;
-  j: Integer;
-
-  col: TStrings;
 begin
   plPatient.Visible := true;
   plSettings.Visible := false;
-
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'patient';
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
-
-  error := OriginalJSONObject.GetValue('error') is TJSONTrue;
-  if error = false then
-  begin
-    joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
-
-    gridPatient.RowCount := joItems.Count + 1;
-    for i := 0 to joItems.Count - 1 do
-    begin
-      joItem := joItems.Items[i] as TJSONObject;
-      // ShowMessage(joItem.ToString);
-      gridPatient.Cells[GRID_PATIENT_FNAME, i + 1] := joItem.GetValue(JSON_FNAME).Value;
-
-      gridPatient.Cells[GRID_PATIENT_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
-
-      gridPatient.Cells[GRID_PATIENT_LNAME, i + 1] := joItem.GetValue(JSON_LNAME).Value;
-
-      gridPatient.Cells[GRID_PATIENT_BIRTHDAY, i + 1] :=
-        joItem.GetValue(JSON_BIRTHDAY).Value;
-
-      if joItem.GetValue(JSON_SEX).Value = '1' then
-        gridPatient.Cells[GRID_PATIENT_SEX, i + 1] := TEXT_MEN
-      else
-        gridPatient.Cells[GRID_PATIENT_SEX, i + 1] := TEXT_WOMEN;
-
-      gridPatient.Cells[GRID_PATIENT_PROFF, i + 1] := joItem.GetValue(JSON_PROFF).Value;
-
-      gridPatient.Cells[GRID_PATIENT_ADDRESS1, i + 1] :=
-        joItem.GetValue(JSON_ADDRESS1).Value;
-
-      gridPatient.Cells[GRID_PATIENT_ADDRESS2, i + 1] :=
-        joItem.GetValue(JSON_ADDRESS2).Value;
-
-      gridPatient.Cells[GRID_PATIENT_ADDRESS3, i + 1] :=
-        joItem.GetValue(JSON_ADDRESS3).Value;
-
-      gridPatient.Cells[GRID_PATIENT_PHONE1, i + 1] := joItem.GetValue(JSON_PHONE1).Value;
-
-      gridPatient.Cells[GRID_PATIENT_PHONE2, i + 1] := joItem.GetValue(JSON_PHONE2).Value;
-
-      gridPatient.Cells[GRID_PATIENT_NOTES, i + 1] := joItem.GetValue(JSON_NOTES).Value;
-
-      gridPatient.Cells[GRID_PATIENT_CREATED, i + 1] :=
-        joItem.GetValue(JSON_CREATED).Value;
-      // скрытый столбей, содержжит id
-      gridPatient.Cells[GRID_PATIENT_ID, i + 1] := joItem.GetValue('id').Value;
-    end;
-  end;
-  FreeAndNil(OriginalJSONObject);
-  // gridPatient.AutoSize:=true;
-  gridPatient.AutoSizeColumns(false);
-  if gridPatient.ColWidths[GRID_PATIENT_FNAME] < 100 then
-    gridPatient.ColWidths[GRID_PATIENT_FNAME] := 100;
-  if gridPatient.ColWidths[GRID_PATIENT_NAME] < 100 then
-    gridPatient.ColWidths[GRID_PATIENT_NAME] := 100;
-  if gridPatient.ColWidths[GRID_PATIENT_LNAME] < 100 then
-    gridPatient.ColWidths[GRID_PATIENT_LNAME] := 100;
-  // gridPatient.ColWidths[GRID_PATIENT_NOTES]:=200;
-  gridPatient.ColWidths[GRID_PATIENT_NOTES] := 150;
+  aaaPatientRefresh
 end;
 
 procedure TfmMain.buttonSettingsClick(Sender: TObject);
@@ -821,9 +865,15 @@ begin
   plSettings.Visible := true;
 end;
 
+procedure TfmMain.editFNameChange(Sender: TObject);
+begin
+  aaaPatientFilter(editFName.Text + '*',GRID_PATIENT_FNAME);
+end;
+
 procedure TfmMain.editFNameRightButtonClick(Sender: TObject);
 begin
-
+  editFName.Clear;
+  editFName.SetFocus;
 end;
 
 // TODO Доделать процедуру редактирования сотрудника
@@ -953,6 +1003,7 @@ begin
   error := OriginalJSONObject.GetValue('error') is TJSONTrue;
   if error = false then
   begin
+    FreeAndNil(OriginalJSONObject);
     joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
 
     gridEmployee.RowCount := joItems.Count + 1;
