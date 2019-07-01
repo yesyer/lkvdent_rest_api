@@ -2,8 +2,8 @@ object fmMain: TfmMain
   Left = 0
   Top = 0
   Caption = 'fmMain'
-  ClientHeight = 517
-  ClientWidth = 873
+  ClientHeight = 503
+  ClientWidth = 825
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -17,13 +17,14 @@ object fmMain: TfmMain
     Left = 0
     Top = 0
     Width = 70
-    Height = 498
+    Height = 484
     Align = alLeft
     BevelOuter = bvNone
     Caption = 'plMainLeft'
     Color = clBtnShadow
     ParentBackground = False
     TabOrder = 0
+    ExplicitHeight = 498
     object buttonSettings: TAdvGlassButton
       Left = 4
       Top = 126
@@ -71,8 +72,8 @@ object fmMain: TfmMain
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 498
-    Width = 873
+    Top = 484
+    Width = 825
     Height = 19
     Panels = <
       item
@@ -81,22 +82,26 @@ object fmMain: TfmMain
       item
         Width = 50
       end>
+    ExplicitTop = 498
+    ExplicitWidth = 873
   end
   object plMainClient: TPanel
     Left = 70
     Top = 0
-    Width = 803
-    Height = 498
+    Width = 755
+    Height = 484
     Align = alClient
     BevelOuter = bvNone
     Caption = 'plMainClient'
     Color = clSilver
     ParentBackground = False
     TabOrder = 1
+    ExplicitWidth = 803
+    ExplicitHeight = 498
     object plMainTop: TPanel
       Left = 0
       Top = 0
-      Width = 803
+      Width = 755
       Height = 40
       Align = alTop
       BevelOuter = bvNone
@@ -105,13 +110,14 @@ object fmMain: TfmMain
       ParentBackground = False
       TabOrder = 0
       OnClick = plMainTopClick
+      ExplicitWidth = 803
     end
     object pageMain: TAdvPageControl
       Left = 0
       Top = 40
-      Width = 803
-      Height = 458
-      ActivePage = tabMain
+      Width = 755
+      Height = 444
+      ActivePage = tabApplication
       ActiveFont.Charset = DEFAULT_CHARSET
       ActiveFont.Color = clWindowText
       ActiveFont.Height = -11
@@ -128,29 +134,33 @@ object fmMain: TfmMain
       PersistPagesState.Enabled = False
       TabOrder = 1
       TabPosition = tpBottom
-      object tabMain: TAdvTabSheet
+      object tabApplication: TAdvTabSheet
         Caption = ' '#1055#1088#1086#1075#1088#1072#1084#1084#1072' '
         Color = clBtnFace
         ColorTo = clNone
         TabColor = clBtnFace
         TabColorTo = clNone
+        ExplicitWidth = 795
+        ExplicitHeight = 432
         object plSettings: TPanel
           Left = 0
           Top = 0
-          Width = 795
-          Height = 432
+          Width = 747
+          Height = 418
           Align = alClient
           BevelOuter = bvNone
           Caption = 'plSettings'
           Color = clTeal
           ParentBackground = False
           TabOrder = 1
+          ExplicitWidth = 795
+          ExplicitHeight = 432
           object pageSettings: TAdvPageControl
             Left = 0
             Top = 0
-            Width = 795
-            Height = 432
-            ActivePage = tabTree
+            Width = 747
+            Height = 418
+            ActivePage = tabEmployee
             ActiveFont.Charset = DEFAULT_CHARSET
             ActiveFont.Color = clWindowText
             ActiveFont.Height = -11
@@ -173,11 +183,13 @@ object fmMain: TfmMain
               TabColor = clBtnFace
               TabColorTo = clNone
               OnShow = tabTreeShow
+              ExplicitWidth = 787
+              ExplicitHeight = 404
               object treeNodeRoot: TAdvTreeView
                 Left = 0
                 Top = 31
                 Width = 265
-                Height = 373
+                Height = 359
                 Align = alLeft
                 Color = clWhite
                 TabOrder = 0
@@ -456,12 +468,13 @@ object fmMain: TfmMain
                   7B7D7B7B7D7B7B7D7B7B7D7B7B7D7B7B7D7B7B7D7B7B7D7B0000}
                 Version = '1.1.0.6'
                 OnAfterSelectNode = treeNodeRootAfterSelectNode
+                ExplicitHeight = 373
               end
               object treeNode: TAdvTreeView
                 Left = 265
                 Top = 31
-                Width = 522
-                Height = 373
+                Width = 474
+                Height = 359
                 Align = alClient
                 Color = clWhite
                 TabOrder = 1
@@ -867,17 +880,20 @@ object fmMain: TfmMain
                 Version = '1.1.0.6'
                 OnNodeClick = treeNodeNodeClick
                 OnNodeDblClick = treeNodeNodeDblClick
+                ExplicitWidth = 522
+                ExplicitHeight = 373
               end
               object plTemplateTop: TPanel
                 Left = 0
                 Top = 0
-                Width = 787
+                Width = 739
                 Height = 31
                 Align = alTop
                 BevelOuter = bvNone
                 Caption = 'plTemplateTop'
                 ShowCaption = False
                 TabOrder = 2
+                ExplicitWidth = 787
                 object buttonNodeSave: TAdvGlassButton
                   Left = 174
                   Top = 2
@@ -983,8 +999,8 @@ object fmMain: TfmMain
               object gridEmployee: TAdvStringGrid
                 Left = 0
                 Top = 31
-                Width = 787
-                Height = 373
+                Width = 739
+                Height = 359
                 Cursor = crDefault
                 Align = alClient
                 ColCount = 4
@@ -1109,8 +1125,6 @@ object fmMain: TfmMain
                 ShowSelection = False
                 SortSettings.DefaultFormat = ssAutomatic
                 Version = '8.1.3.0'
-                ExplicitWidth = 795
-                ExplicitHeight = 399
                 ColWidths = (
                   22
                   197
@@ -1120,7 +1134,7 @@ object fmMain: TfmMain
               object plEmployeeTop: TPanel
                 Left = 0
                 Top = 0
-                Width = 787
+                Width = 739
                 Height = 31
                 Align = alTop
                 BevelOuter = bvNone
@@ -1178,30 +1192,33 @@ object fmMain: TfmMain
         object plPatient: TPanel
           Left = 0
           Top = 0
-          Width = 795
-          Height = 432
+          Width = 747
+          Height = 418
           Align = alClient
           BevelOuter = bvNone
           Caption = 'plPatient'
           Color = clYellow
           ParentBackground = False
           TabOrder = 0
+          ExplicitWidth = 795
+          ExplicitHeight = 432
           object plPatientInsert: TPanel
             Left = 0
             Top = 31
             Width = 296
-            Height = 401
+            Height = 387
             Align = alLeft
             BevelOuter = bvNone
             Caption = 'plPatientInsert'
             ParentBackground = False
             ShowCaption = False
             TabOrder = 0
+            ExplicitHeight = 401
             object ScrollBox1: TScrollBox
               Left = 0
               Top = 33
               Width = 296
-              Height = 368
+              Height = 354
               HorzScrollBar.Visible = False
               Align = alClient
               BevelInner = bvNone
@@ -1210,6 +1227,7 @@ object fmMain: TfmMain
               Color = clBtnFace
               ParentColor = False
               TabOrder = 0
+              ExplicitHeight = 368
               object GroupBox2: TGroupBox
                 Left = 6
                 Top = 193
@@ -1549,8 +1567,8 @@ object fmMain: TfmMain
           object gridPatient: TAdvStringGrid
             Left = 296
             Top = 31
-            Width = 499
-            Height = 401
+            Width = 451
+            Height = 387
             Cursor = crDefault
             Align = alClient
             ColCount = 15
@@ -1619,6 +1637,7 @@ object fmMain: TfmMain
             FilterDropDown.Font.Style = []
             FilterDropDown.TextChecked = 'Checked'
             FilterDropDown.TextUnChecked = 'Unchecked'
+            FilterDropDownMultiCol = False
             FilterDropDownClear = '(All)'
             FilterEdit.TypeNames.Strings = (
               'Starts with'
@@ -1632,6 +1651,7 @@ object fmMain: TfmMain
               'Clear')
             FixedColWidth = 22
             FixedRowHeight = 22
+            FixedColAlways = True
             FixedFont.Charset = DEFAULT_CHARSET
             FixedFont.Color = clBlack
             FixedFont.Height = -11
@@ -1686,6 +1706,8 @@ object fmMain: TfmMain
             ShowSelection = False
             SortSettings.DefaultFormat = ssAutomatic
             Version = '8.1.3.0'
+            ExplicitWidth = 499
+            ExplicitHeight = 401
             ColWidths = (
               22
               197
@@ -1706,13 +1728,14 @@ object fmMain: TfmMain
           object Panel2: TPanel
             Left = 0
             Top = 0
-            Width = 795
+            Width = 747
             Height = 31
             Align = alTop
             BevelOuter = bvNone
             Caption = 'Panel2'
             ParentBackground = False
             TabOrder = 2
+            ExplicitWidth = 795
             object buttonPatientInsert: TAdvGlassButton
               Left = 6
               Top = 2

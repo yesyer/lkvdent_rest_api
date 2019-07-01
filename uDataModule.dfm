@@ -14,12 +14,14 @@ object dmDataModule: TdmDataModule
   object RESTRequest1: TRESTRequest
     Client = RESTClient1
     Params = <>
+    Resource = 'tree'
     Response = RESTResponse1
     SynchronizedEvents = False
     Left = 40
     Top = 56
   end
   object RESTResponse1: TRESTResponse
+    ContentType = 'text/html'
     Left = 40
     Top = 104
   end
@@ -27,7 +29,7 @@ object dmDataModule: TdmDataModule
     Left = 38
     Top = 152
     Bitmap = {
-      494C010101000800140010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800180010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
