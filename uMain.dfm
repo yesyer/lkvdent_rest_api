@@ -1164,14 +1164,14 @@ object fmMain: TfmMain
       Color = clYellow
       ParentBackground = False
       TabOrder = 2
-      object plInsertPatient: TPanel
+      object plPatientInsert: TPanel
         Left = 0
         Top = 31
         Width = 296
         Height = 427
         Align = alLeft
         BevelOuter = bvNone
-        Caption = 'plInsertPatient'
+        Caption = 'plPatientInsert'
         ParentBackground = False
         ShowCaption = False
         TabOrder = 0
@@ -1289,7 +1289,7 @@ object fmMain: TfmMain
               Top = 163
               Width = 142
               Height = 21
-              EditMask = '\(999\)000-0000;0;'
+              EditMask = '!\(999\)999-9999;0;0'
               MaxLength = 13
               TabOrder = 3
               Text = ''
@@ -1299,7 +1299,7 @@ object fmMain: TfmMain
               Top = 190
               Width = 142
               Height = 21
-              EditMask = '\(999\)000-0000;0;'
+              EditMask = '!\(999\)999-9999;0;0'
               MaxLength = 13
               TabOrder = 4
               Text = ''
@@ -1312,7 +1312,6 @@ object fmMain: TfmMain
               Lines.Strings = (
                 '')
               TabOrder = 5
-              OnChange = memoNotesChange
             end
           end
           object GroupBox1: TGroupBox
@@ -1333,6 +1332,14 @@ object fmMain: TfmMain
               Height = 13
               Alignment = taRightJustify
               Caption = #1060#1072#1084#1080#1083#1080#1103'*:'
+              Color = clBtnFace
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              ParentColor = False
+              ParentFont = False
             end
             object Label2: TLabel
               Left = 67
@@ -1367,12 +1374,12 @@ object fmMain: TfmMain
               Caption = #1055#1086#1083'*:'
             end
             object Label6: TLabel
-              Left = 11
+              Left = 5
               Top = 160
-              Width = 84
+              Width = 90
               Height = 13
               Alignment = taRightJustify
-              Caption = #1044#1072#1090#1072' '#1088#1086#1078#1076#1077#1085#1080#1103':'
+              Caption = #1044#1072#1090#1072' '#1088#1086#1078#1076#1077#1085#1080#1103'*:'
             end
             object editFName: TButtonedEdit
               Left = 102
@@ -1435,10 +1442,10 @@ object fmMain: TfmMain
               Style = csDropDownList
               ItemIndex = 0
               TabOrder = 4
-              Text = #1052#1091#1078'.'
+              Text = #1046#1077#1085'.'
               Items.Strings = (
-                #1052#1091#1078'.'
-                #1046#1077#1085'.')
+                #1046#1077#1085'.'
+                #1052#1091#1078'.')
             end
             object dateBirthday: TDateTimePicker
               Left = 101
@@ -1446,8 +1453,13 @@ object fmMain: TfmMain
               Width = 153
               Height = 21
               Date = 43646.801533043980000000
-              Format = 'yyyy-MM-dd'
               Time = 43646.801533043980000000
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              ParentFont = False
               TabOrder = 5
             end
           end
@@ -1463,7 +1475,7 @@ object fmMain: TfmMain
           ParentBackground = False
           ShowCaption = False
           TabOrder = 1
-          object AdvGlassButton3: TAdvGlassButton
+          object buttonPatientSave: TAdvGlassButton
             Left = 6
             Top = 4
             Width = 80
@@ -1484,8 +1496,9 @@ object fmMain: TfmMain
             ShineColor = clWhite
             TabOrder = 0
             Version = '1.3.0.2'
+            OnClick = buttonPatientSaveClick
           end
-          object AdvGlassButton1: TAdvGlassButton
+          object buttonPatientCancel: TAdvGlassButton
             Left = 210
             Top = 4
             Width = 80
@@ -1506,6 +1519,7 @@ object fmMain: TfmMain
             ShineColor = clWhite
             TabOrder = 1
             Version = '1.3.0.2'
+            OnClick = buttonPatientCancelClick
           end
         end
       end
@@ -1701,7 +1715,7 @@ object fmMain: TfmMain
           Version = '1.3.0.2'
           OnClick = buttonPatientInsertClick
         end
-        object AdvGlassButton5: TAdvGlassButton
+        object buttonPatientModify: TAdvGlassButton
           Left = 92
           Top = 2
           Width = 80
@@ -1724,15 +1738,15 @@ object fmMain: TfmMain
           Style = tasCheck
           TabOrder = 1
           Version = '1.3.0.2'
-          OnClick = AdvGlassButton5Click
+          OnClick = buttonPatientModifyClick
         end
       end
     end
   end
   object treeMenu: TAdvPopupMenu
     Version = '2.6.2.1'
-    Left = 6
-    Top = 232
+    Left = 14
+    Top = 256
     object menuInsertSubnode: TMenuItem
       Caption = #1044#1086#1073#1072#1074#1080#1090#1100' '#1096#1072#1073#1083#1086#1085'...'
       OnClick = menuInsertSubnodeClick
