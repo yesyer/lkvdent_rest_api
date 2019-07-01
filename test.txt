@@ -1,0 +1,53 @@
+procedure TForm1.Button1Click(Sender: TObject);
+var
+  jValue:TJSONValue;
+
+  OriginalJSONObject, SomeJsonObject, joItem: TJSONObject;
+  joItems: TJSONArray;
+  OriginJsonString, Msg: String;
+  Success:Boolean;
+  i: Integer;
+begin
+  with dmDataModule do
+    begin
+      RESTRequest1.Execute;
+      jValue:=RESTResponse1.JSONValue;
+      MemoSource.Text:= jValue.ToString;
+    end;
+
+  OriginJsonString := MemoSource.Lines.Text; // original JSON without added braces around it
+  OriginalJSONObject := TJSONObject.ParseJSONValue(OriginJsonString) as TJSONObject;
+
+  Success :=  OriginalJSONObject.GetValue('error') is TJSONTrue;
+  // if you are using Delphi 10 Seattle or later, you can use this instead:
+  //Success := (OriginalJSONObject.GetValue('Success') as TJSONBool).AsBoolean;
+
+  if Success then MemoDest.Lines.Add('error=true') else // Strange but work correct so...
+   MemoDest.Lines.Add('error=false');
+
+  // MemoDest.Lines.Add('Success='+Success);
+
+
+  //Msg := OriginalJSONObject.GetValue('response').Value;
+  //MemoDest.Lines.Add('response='+Msg);
+
+  //SomeJsonObject := OriginalJSONObject.GetValue('response') as TJSONObject;
+  // use joRet.GetValue() as needed ...
+
+  // Names from array items
+
+  MemoDest.Lines.Add('Names from array "response"');
+  joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
+
+  for i := 0 to joItems.Count-1 do
+  begin
+    joItem := joItems.Items[i] as TJSONObject;
+    // use joItem.GetValue() as needed ...
+    MemoDest.Lines.Add ('Id='+joItem.GetValue('id').Value);
+    MemoDest.Lines.Add ('Name='+joItem.GetValue('name').Value);
+
+  end;
+
+
+  FreeAndNil(OriginalJSONObject);
+end;

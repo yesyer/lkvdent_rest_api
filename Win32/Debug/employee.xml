@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<list>
+<record>
+<col1>Фамилия И.О.</col1>
+<col2>Активный</col2>
+<col3>Дата создания</col3>
+</record>
+<record>
+<col1>Мореходов Е.А.</col1>
+<col2>Активный</col2>
+<col3>2019-06-19 09:10:20</col3>
+</record>
+<record>
+<col1>Петрушкин Ф.X.</col1>
+<col2>Не активный</col2>
+<col3>2019-06-19 09:00:00</col3>
+</record>
+<record>
+<col1>Митрофанов С.Д.</col1>
+<col2>Активный</col2>
+<col3>2019-06-21 12:26:21</col3>
+</record>
+<record>
+<col1>Штельман А.А.</col1>
+<col2>Активный</col2>
+<col3>2019-06-21 15:57:45</col3>
+</record>
+</list>
