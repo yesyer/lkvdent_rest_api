@@ -1,2 +1,90 @@
-SELECT cd.id, cd.patient_id, CONCAT(pt.fname, " ", LEFT(pt.name,1), ".", IF(pt.lname="", "", " "), IF(pt.lname="", "", LEFT(pt.lname,1)), IF(pt.lname="", "", ".")) as name FROM tb_card cd
-join tb_patient pt WHERE cd.id=pt.id
+SELECT cd.id, cd.patient_id, CONCAT(pt.fname, " ", LEFT(pt.name,1), ".", IF(pt.lname="", "", " "), IF(pt.lname="", "", LEFT(pt.lname,1)), IF(pt.lname="", "", ".")) as name, cd.notes, em.name as em_name, cd.is_init_exam, cd.created
+FROM tb_card cd
+join tb_patient pt 
+join tb_employee em
+WHERE cd.id=pt.id and cd.employee_id=em.id and cd.patient_id=1
+
+SELECT tp.id, tp.path, t.id, t.parent_id, t.content, t.is_init_exam, t.is_enable
+FROM tb_tree_path tp
+RIGHT JOIN tb_tree t ON tp.id = t.id
+WHERE LOCATE(tp.path,(SELECT tp2.path
+						   FROM tb_tree_path tp2
+						   WHERE tp2.id = 18 -- Идентификатор корня дерева.
+						  )) <> 0
+OR tp.path LIKE CONCAT(  -- Закоментировать строку если ищем полный путь и ветки
+						(
+							SELECT tp2.path
+							FROM tb_tree_path tp2
+							WHERE tp2.id = 18 -- Идентификатор корня дерева.
+						),
+						'%'
+					)
+                    #AND t.is_enable = 1 -- Только активные данные.					
+ORDER BY tp.path
+
+CREATE TRIGGER `tree__au` AFTER UPDATE ON `tb_tree`
+FOR EACH ROW BEGIN
+    DECLARE old_path, new_path VARCHAR(255) CHARACTER SET latin1;
+
+    SET old_path = (
+        SELECT tp.path
+        FROM tb_tree_path tp
+        WHERE tp.id = OLD.id);
+    
+    SET new_path = CONCAT(
+        IFNULL((SELECT tp.path FROM tb_tree_path tp WHERE tp.id = NEW.parent_id),'/'),
+        OLD.id,
+        '/');
+
+    -- Закольцовка пути?
+    IF new_path LIKE CONCAT('%/', OLD.id, '/_%') THEN
+        SIGNAL SQLSTATE VALUE '42000'
+            SET MESSAGE_TEXT =
+                'An attempt to damage the integrity of the tree.';
+    END IF;
+
+    -- Изменение пути у всего поддерева.
+    UPDATE tb_tree_path
+    SET path = REPLACE(path, old_path, new_path)
+    WHERE path LIKE CONCAT(old_path, '%');  
+END
+
+CREATE TRIGGER `tree__au` AFTER UPDATE ON `tb_tree`
+FOR EACH ROW BEGIN
+    DECLARE old_path, new_path VARCHAR(255) CHARACTER SET latin1;
+
+    SET old_path = (
+        SELECT tp.path
+        FROM tb_tree_path tp
+        WHERE tp.id = OLD.id);
+    
+    SET new_path = CONCAT(
+        IFNULL((SELECT tp.path FROM tb_tree_path tp WHERE tp.id = NEW.parent_id),'/'),
+        OLD.id,
+        '/');
+
+    -- Закольцовка пути?
+    IF new_path LIKE CONCAT('%/', OLD.id, '/_%') THEN
+        SIGNAL SQLSTATE VALUE '42000'
+            SET MESSAGE_TEXT =
+                'An attempt to damage the integrity of the tree.';
+    END IF;
+
+    -- Изменение пути у всего поддерева.
+    UPDATE tb_tree_path
+    SET path = REPLACE(path, old_path, new_path)
+    WHERE path LIKE CONCAT(old_path, '%');
+    
+    IF NEW.is_init_exam = 1 THEN
+    	UPDATE tb_tree_path
+        SET NEW.is_init_exam = 1
+        WHERE NEW.id in (SELECT t.id
+						 FROM tb_tree_path tp
+						 JOIN tb_tree t ON tp.id = t.id
+						 WHERE LOCATE(tp.path,(
+                         	SELECT tp2.path
+						    FROM tb_tree_path tp2
+						    WHERE tp2.id = NEW.id -- Идентификатор корня дерева.
+						 )) <> 0)
+    END IF
+END
