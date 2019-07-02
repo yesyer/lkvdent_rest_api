@@ -100,13 +100,14 @@ type
     pageMain: TAdvPageControl;
     tabApplication: TAdvTabSheet;
     tabLog: TAdvTabSheet;
+    plCards: TPanel;
     procedure tabEmployeeShow(Sender: TObject);
     procedure tabTreeShow(Sender: TObject);
     procedure treeNodeRootAfterSelectNode(Sender: TObject;
       ANode: TAdvTreeViewVirtualNode);
 
-    procedure aaaBuildTree(id: String; joItems: TJSONArray;
-      PNode: TAdvTreeViewNode; TTree: TAdvTreeView);
+    procedure aaaBuildTree(id: String; joItems: TJSONArray; PNode: TAdvTreeViewNode;
+      TTree: TAdvTreeView);
     procedure aaaSearchModifyNode(PNode: TAdvTreeViewNode);
     function aaaIsEmptyText(s, msg: String): Boolean;
     procedure aaaModifyStyle(s: ShortInt);
@@ -114,21 +115,19 @@ type
     procedure aaaPatientRefresh;
     procedure aaaPatientFilter(FilterStr: String; FCol: SmallInt);
 
-    procedure treeNodeMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
+    procedure treeNodeMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+      X, Y: Integer);
     procedure menuInsertNodeClick(Sender: TObject);
     procedure menuInsertSubnodeClick(Sender: TObject);
     procedure menuModityClick(Sender: TObject);
-    procedure treeNodeNodeDblClick(Sender: TObject;
-      ANode: TAdvTreeViewVirtualNode);
+    procedure treeNodeNodeDblClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
     procedure buttonNodeSaveClick(Sender: TObject);
     procedure buttonNodeCancelClick(Sender: TObject);
     procedure menuDeleteClick(Sender: TObject);
     procedure buttonEmployeeInsertClick(Sender: TObject);
     procedure gridEmployeeDblClickCell(Sender: TObject; ARow, ACol: Integer);
     procedure buttonNodeInsertClick(Sender: TObject);
-    procedure treeNodeNodeClick(Sender: TObject;
-      ANode: TAdvTreeViewVirtualNode);
+    procedure treeNodeNodeClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
     procedure buttonSettingsClick(Sender: TObject);
     procedure buttonPatientClick(Sender: TObject);
     procedure plMainTopClick(Sender: TObject);
@@ -225,10 +224,8 @@ const
   JSON_PHONE2 = 'phone2';
   JSON_NOTES = 'notes';
 
-  MSG_TEXT_TEMPLATE_EMPTY = 'Поле "' + TEXT_NAME_TEMPLATE +
-    '" не должно быть пустым!';
-  MSG_TEXT_EMPLOYEE_EMPTY = 'Поле "' + TEXT_NAME_EMPLOYEE +
-    '" не должно быть пустым!';
+  MSG_TEXT_TEMPLATE_EMPTY = 'Поле "' + TEXT_NAME_TEMPLATE + '" не должно быть пустым!';
+  MSG_TEXT_EMPLOYEE_EMPTY = 'Поле "' + TEXT_NAME_EMPLOYEE + '" не должно быть пустым!';
   MSG_TEXT_SAVE_NODE_WARNING =
     'Для добавления шаблона к только что созданным узлам, необходимо сохранить предыдущие изменения';
 
@@ -244,8 +241,8 @@ begin
 end;
 
 { рекрусивная процедура "рисует" treeview из json по коду id }
-procedure TfmMain.aaaBuildTree(id: String; joItems: TJSONArray;
-  PNode: TAdvTreeViewNode; TTree: TAdvTreeView);
+procedure TfmMain.aaaBuildTree(id: String; joItems: TJSONArray; PNode: TAdvTreeViewNode;
+  TTree: TAdvTreeView);
 var
   joItem: TJSONObject;
   CNode: TAdvTreeViewNode;
@@ -423,14 +420,11 @@ begin
       begin
         joItem := joItems.Items[i] as TJSONObject;
 
-        gridPatient.Cells[GRID_PATIENT_FNAME, i + 1] :=
-          joItem.GetValue(JSON_FNAME).Value;
+        gridPatient.Cells[GRID_PATIENT_FNAME, i + 1] := joItem.GetValue(JSON_FNAME).Value;
 
-        gridPatient.Cells[GRID_PATIENT_NAME, i + 1] :=
-          joItem.GetValue(JSON_NAME).Value;
+        gridPatient.Cells[GRID_PATIENT_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
 
-        gridPatient.Cells[GRID_PATIENT_LNAME, i + 1] :=
-          joItem.GetValue(JSON_LNAME).Value;
+        gridPatient.Cells[GRID_PATIENT_LNAME, i + 1] := joItem.GetValue(JSON_LNAME).Value;
 
         gridPatient.Cells[GRID_PATIENT_BIRTHDAY, i + 1] :=
           joItem.GetValue(JSON_BIRTHDAY).Value;
@@ -440,8 +434,7 @@ begin
         else
           gridPatient.Cells[GRID_PATIENT_SEX, i + 1] := TEXT_WOMEN;
 
-        gridPatient.Cells[GRID_PATIENT_PROFF, i + 1] :=
-          joItem.GetValue(JSON_PROFF).Value;
+        gridPatient.Cells[GRID_PATIENT_PROFF, i + 1] := joItem.GetValue(JSON_PROFF).Value;
 
         gridPatient.Cells[GRID_PATIENT_ADDRESS1, i + 1] :=
           joItem.GetValue(JSON_ADDRESS1).Value;
@@ -458,14 +451,12 @@ begin
         gridPatient.Cells[GRID_PATIENT_PHONE2, i + 1] :=
           joItem.GetValue(JSON_PHONE2).Value;
 
-        gridPatient.Cells[GRID_PATIENT_NOTES, i + 1] :=
-          joItem.GetValue(JSON_NOTES).Value;
+        gridPatient.Cells[GRID_PATIENT_NOTES, i + 1] := joItem.GetValue(JSON_NOTES).Value;
 
         gridPatient.Cells[GRID_PATIENT_CREATED, i + 1] :=
           joItem.GetValue(JSON_CREATED).Value;
         // скрытый столбей, содержжит id
-        gridPatient.Cells[GRID_PATIENT_ID, i + 1] :=
-          joItem.GetValue('id').Value;
+        gridPatient.Cells[GRID_PATIENT_ID, i + 1] := joItem.GetValue('id').Value;
       end;
     end;
   end;
@@ -496,6 +487,9 @@ begin
   end;
 
   gridPatient.FilterActive := true;
+  if (gridPatient.VisibleRowCount=1) and (gridPatient.Cells[FCol,1]=gridPatient.ColumnHeaders[1])  then
+    gridPatient.FilterActive:= false;
+
 end;
 
 procedure TfmMain.buttonPatientModifyClick(Sender: TObject);
@@ -518,19 +512,14 @@ begin
 
   buttonPatientSave.Caption := 'Изменить';
   aaaPatientFieldClear;
-  editFName.Text := gridPatient.Cells[GRID_PATIENT_FNAME,
-    gridPatient.SelectedRow[0]];
-  editName.Text := gridPatient.Cells[GRID_PATIENT_NAME,
-    gridPatient.SelectedRow[0]];
-  editLName.Text := gridPatient.Cells[GRID_PATIENT_LNAME,
-    gridPatient.SelectedRow[0]];
-  editProff.Text := gridPatient.Cells[GRID_PATIENT_PROFF,
-    gridPatient.SelectedRow[0]];
+  editFName.Text := gridPatient.Cells[GRID_PATIENT_FNAME, gridPatient.SelectedRow[0]];
+  editName.Text := gridPatient.Cells[GRID_PATIENT_NAME, gridPatient.SelectedRow[0]];
+  editLName.Text := gridPatient.Cells[GRID_PATIENT_LNAME, gridPatient.SelectedRow[0]];
+  editProff.Text := gridPatient.Cells[GRID_PATIENT_PROFF, gridPatient.SelectedRow[0]];
 
   // заглушка, вслучии если поле содержит нулевую дату/время
-  if (gridPatient.Cells[GRID_PATIENT_BIRTHDAY, gridPatient.SelectedRow[0]]
-    = '0000-00-00') or (gridPatient.Cells[GRID_PATIENT_BIRTHDAY,
-    gridPatient.SelectedRow[0]] = '') then
+  if (gridPatient.Cells[GRID_PATIENT_BIRTHDAY, gridPatient.SelectedRow[0]] = '0000-00-00')
+    or (gridPatient.Cells[GRID_PATIENT_BIRTHDAY, gridPatient.SelectedRow[0]] = '') then
   begin
     dateBirthday.Date := now;
     // dateBirthday.Font.Color:=clRed;
@@ -545,8 +534,7 @@ begin
       gridPatient.SelectedRow[0]], fmt);
   end;
 
-  if gridPatient.Cells[GRID_PATIENT_SEX, gridPatient.SelectedRow[0]] = TEXT_MEN
-  then
+  if gridPatient.Cells[GRID_PATIENT_SEX, gridPatient.SelectedRow[0]] = TEXT_MEN then
     comboSex.ItemIndex := 1
   else
     comboSex.ItemIndex := 0;
@@ -557,12 +545,9 @@ begin
     gridPatient.SelectedRow[0]];
   editAddress3.Text := gridPatient.Cells[GRID_PATIENT_ADDRESS3,
     gridPatient.SelectedRow[0]];
-  editPhone1.Text := gridPatient.Cells[GRID_PATIENT_PHONE1,
-    gridPatient.SelectedRow[0]];
-  editPhone2.Text := gridPatient.Cells[GRID_PATIENT_PHONE2,
-    gridPatient.SelectedRow[0]];
-  memoNotes.Lines.Add(gridPatient.Cells[GRID_PATIENT_NOTES,
-    gridPatient.SelectedRow[0]]);
+  editPhone1.Text := gridPatient.Cells[GRID_PATIENT_PHONE1, gridPatient.SelectedRow[0]];
+  editPhone2.Text := gridPatient.Cells[GRID_PATIENT_PHONE2, gridPatient.SelectedRow[0]];
+  memoNotes.Lines.Add(gridPatient.Cells[GRID_PATIENT_NOTES, gridPatient.SelectedRow[0]]);
 end;
 
 procedure TfmMain.buttonPatientSaveClick(Sender: TObject);
@@ -577,8 +562,8 @@ begin
   if (Length(Trim(editFName.Text)) = 0) or (Length(Trim(editName.Text)) = 0) or
     (Length(Trim(editAddress1.Text)) = 0) then
   begin
-    MessageDlg('Поля отмеченные звездочкой (*) должны быть заполнены',
-      mtWarning, [mbOK], 0);
+    MessageDlg('Поля отмеченные звездочкой (*) должны быть заполнены', mtWarning,
+      [mbOK], 0);
     Exit;
   end;
 
@@ -593,15 +578,12 @@ begin
 
       RESTRequest1.Params.Clear;
       // RESTRequest1.Params.AddHeader('Connection', 'keep-alive');
-      RESTRequest1.Params.AddItem(JSON_FNAME,
-        UTF8EncodeToShortString(Trim(editFName.Text)), pkGETorPOST,
-        [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_NAME,
-        UTF8EncodeToShortString(Trim(editName.Text)), pkGETorPOST,
-        [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_LNAME,
-        UTF8EncodeToShortString(Trim(editLName.Text)), pkGETorPOST,
-        [poDoNotEncode]);
+      RESTRequest1.Params.AddItem(JSON_FNAME, UTF8EncodeToShortString(Trim(editFName.Text)
+        ), pkGETorPOST, [poDoNotEncode]);
+      RESTRequest1.Params.AddItem(JSON_NAME, UTF8EncodeToShortString(Trim(editName.Text)),
+        pkGETorPOST, [poDoNotEncode]);
+      RESTRequest1.Params.AddItem(JSON_LNAME, UTF8EncodeToShortString(Trim(editLName.Text)
+        ), pkGETorPOST, [poDoNotEncode]);
 
       GetLocaleFormatSettings(0, fmt);
       fmt.ShortDateFormat := 'yyyy-MM-dd';
@@ -615,24 +597,18 @@ begin
         UTF8EncodeToShortString(IntToStr(comboSex.ItemIndex)), pkGETorPOST,
         [poDoNotEncode]);
 
-      RESTRequest1.Params.AddItem(JSON_PROFF,
-        UTF8EncodeToShortString(Trim(editProff.Text)), pkGETorPOST,
-        [poDoNotEncode]);
+      RESTRequest1.Params.AddItem(JSON_PROFF, UTF8EncodeToShortString(Trim(editProff.Text)
+        ), pkGETorPOST, [poDoNotEncode]);
       RESTRequest1.Params.AddItem(JSON_ADDRESS1,
-        UTF8EncodeToShortString(Trim(editAddress1.Text)), pkGETorPOST,
-        [poDoNotEncode]);
+        UTF8EncodeToShortString(Trim(editAddress1.Text)), pkGETorPOST, [poDoNotEncode]);
       RESTRequest1.Params.AddItem(JSON_ADDRESS2,
-        UTF8EncodeToShortString(Trim(editAddress2.Text)), pkGETorPOST,
-        [poDoNotEncode]);
+        UTF8EncodeToShortString(Trim(editAddress2.Text)), pkGETorPOST, [poDoNotEncode]);
       RESTRequest1.Params.AddItem(JSON_ADDRESS3,
-        UTF8EncodeToShortString(Trim(editAddress3.Text)), pkGETorPOST,
-        [poDoNotEncode]);
+        UTF8EncodeToShortString(Trim(editAddress3.Text)), pkGETorPOST, [poDoNotEncode]);
       RESTRequest1.Params.AddItem(JSON_PHONE1,
-        UTF8EncodeToShortString(Trim(editPhone1.Text)), pkGETorPOST,
-        [poDoNotEncode]);
+        UTF8EncodeToShortString(Trim(editPhone1.Text)), pkGETorPOST, [poDoNotEncode]);
       RESTRequest1.Params.AddItem(JSON_PHONE2,
-        UTF8EncodeToShortString(Trim(editPhone2.Text)), pkGETorPOST,
-        [poDoNotEncode]);
+        UTF8EncodeToShortString(Trim(editPhone2.Text)), pkGETorPOST, [poDoNotEncode]);
       RESTRequest1.Params.AddItem(JSON_NOTES,
         UTF8EncodeToShortString(Trim(memoNotes.Lines.Text)), pkGETorPOST,
         [poDoNotEncode]);
@@ -650,16 +626,13 @@ begin
       RESTRequest1.Params.Clear;
       if editFName.Modified then
         RESTRequest1.Params.AddItem(JSON_FNAME,
-          UTF8EncodeToShortString(Trim(editFName.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+          UTF8EncodeToShortString(Trim(editFName.Text)), pkGETorPOST, [poDoNotEncode]);
       if editName.Modified then
-        RESTRequest1.Params.AddItem(JSON_NAME,
-          UTF8EncodeToShortString(Trim(editName.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+        RESTRequest1.Params.AddItem(JSON_NAME, UTF8EncodeToShortString(Trim(editName.Text)
+          ), pkGETorPOST, [poDoNotEncode]);
       if editLName.Modified then
         RESTRequest1.Params.AddItem(JSON_LNAME,
-          UTF8EncodeToShortString(Trim(editLName.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+          UTF8EncodeToShortString(Trim(editLName.Text)), pkGETorPOST, [poDoNotEncode]);
 
       // оставляем это поле без проверки
       GetLocaleFormatSettings(0, fmt);
@@ -677,28 +650,22 @@ begin
 
       if editProff.Modified then
         RESTRequest1.Params.AddItem(JSON_PROFF,
-          UTF8EncodeToShortString(Trim(editProff.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+          UTF8EncodeToShortString(Trim(editProff.Text)), pkGETorPOST, [poDoNotEncode]);
       if editAddress1.Modified then
         RESTRequest1.Params.AddItem(JSON_ADDRESS1,
-          UTF8EncodeToShortString(Trim(editAddress1.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+          UTF8EncodeToShortString(Trim(editAddress1.Text)), pkGETorPOST, [poDoNotEncode]);
       if editAddress2.Modified then
         RESTRequest1.Params.AddItem(JSON_ADDRESS2,
-          UTF8EncodeToShortString(Trim(editAddress2.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+          UTF8EncodeToShortString(Trim(editAddress2.Text)), pkGETorPOST, [poDoNotEncode]);
       if editAddress3.Modified then
         RESTRequest1.Params.AddItem(JSON_ADDRESS3,
-          UTF8EncodeToShortString(Trim(editAddress3.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+          UTF8EncodeToShortString(Trim(editAddress3.Text)), pkGETorPOST, [poDoNotEncode]);
       if editPhone1.Modified then
         RESTRequest1.Params.AddItem(JSON_PHONE1,
-          UTF8EncodeToShortString(Trim(editPhone1.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+          UTF8EncodeToShortString(Trim(editPhone1.Text)), pkGETorPOST, [poDoNotEncode]);
       if editPhone2.Modified then
         RESTRequest1.Params.AddItem(JSON_PHONE2,
-          UTF8EncodeToShortString(Trim(editPhone2.Text)), pkGETorPOST,
-          [poDoNotEncode]);
+          UTF8EncodeToShortString(Trim(editPhone2.Text)), pkGETorPOST, [poDoNotEncode]);
 
       // оставляем это поле без проверки
       RESTRequest1.Params.AddItem(JSON_NOTES,
@@ -715,6 +682,8 @@ begin
     if error = false then
     begin
       ShowMessage('Сохранение прошло успешно');
+      buttonPatientInsert.Down := false;
+      buttonPatientModify.Down := false;
       plPatientInsert.Visible := false;
       aaaPatientRefresh;
     end
@@ -723,7 +692,7 @@ begin
         ('response').Value);
 
   end;
-  //FreeAndNil(OriginalJSONObject);
+  // FreeAndNil(OriginalJSONObject);
 end;
 
 procedure TfmMain.buttonPatientInsertClick(Sender: TObject);
@@ -766,8 +735,7 @@ begin
         if fmModifyData.ShowModal = mrOk then
           with fmModifyData do
           begin
-            if aaaIsEmptyText(editField.Text, MSG_TEXT_EMPLOYEE_EMPTY) = false
-            then
+            if aaaIsEmptyText(editField.Text, MSG_TEXT_EMPLOYEE_EMPTY) = false then
             begin
               CNode := treeNode.AddNode(glModifyNode.Node);
               CNode.Text[TREE_NODE_CONTENT] := editField.Text;
@@ -783,8 +751,7 @@ begin
                 CNode.Text[TREE_NODE_ENABLE] := TEXT_INACTIVE;
 
               CNode.Text[TREE_NODE_ID] := '';
-              CNode.Text[TREE_NODE_NEW_PARENT_ID] := glModifyNode.Node.Text
-                [TREE_NODE_ID];
+              CNode.Text[TREE_NODE_NEW_PARENT_ID] := glModifyNode.Node.Text[TREE_NODE_ID];
 
               treeNode.ExpandAll;
             end;
@@ -795,8 +762,7 @@ begin
         MessageDlg(MSG_TEXT_SAVE_NODE_WARNING, mtWarning, [mbOK], 0);
       end
     else
-      MessageDlg('Выберите узел для добавление шаблонов', mtInformation,
-        [mbOK], 0);
+      MessageDlg('Выберите узел для добавление шаблонов', mtInformation, [mbOK], 0);
 end;
 
 // TODO успешно/ошибка при сохранении записи
@@ -843,16 +809,13 @@ begin
       RESTRequest1.Params.Clear;
       // RESTRequest1.Params.AddHeader('Connection', 'keep-alive');
       RESTRequest1.Params.AddItem(JSON_PARENT_ID,
-        UTF8EncodeToShortString(insertParentId[i]), pkGETorPOST,
-        [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_CONTENT,
-        UTF8EncodeToShortString(insertContent[i]), pkGETorPOST,
-        [poDoNotEncode]);
+        UTF8EncodeToShortString(insertParentId[i]), pkGETorPOST, [poDoNotEncode]);
+      RESTRequest1.Params.AddItem(JSON_CONTENT, UTF8EncodeToShortString(insertContent[i]),
+        pkGETorPOST, [poDoNotEncode]);
       RESTRequest1.Params.AddItem(JSON_IS_INIT_EXAM,
-        UTF8EncodeToShortString(insertInitExam[i]), pkGETorPOST,
-        [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_IS_ENABLE,
-        UTF8EncodeToShortString(insertEnable[i]), pkGETorPOST, [poDoNotEncode]);
+        UTF8EncodeToShortString(insertInitExam[i]), pkGETorPOST, [poDoNotEncode]);
+      RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString(insertEnable[i]
+        ), pkGETorPOST, [poDoNotEncode]);
 
       RESTRequest1.Execute;
       JSONString := RESTResponse1.JSONValue.ToString;
@@ -865,14 +828,12 @@ begin
 
       RESTRequest1.Params.Clear;
       // RESTRequest1.Params.AddHeader('Connection', 'keep-alive');
-      RESTRequest1.Params.AddItem(JSON_CONTENT,
-        UTF8EncodeToShortString(updateContent[i]), pkGETorPOST,
-        [poDoNotEncode]);
+      RESTRequest1.Params.AddItem(JSON_CONTENT, UTF8EncodeToShortString(updateContent[i]),
+        pkGETorPOST, [poDoNotEncode]);
       RESTRequest1.Params.AddItem(JSON_IS_INIT_EXAM,
-        UTF8EncodeToShortString(updateInitExam[i]), pkGETorPOST,
-        [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_IS_ENABLE,
-        UTF8EncodeToShortString(updateEnable[i]), pkGETorPOST, [poDoNotEncode]);
+        UTF8EncodeToShortString(updateInitExam[i]), pkGETorPOST, [poDoNotEncode]);
+      RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString(updateEnable[i]
+        ), pkGETorPOST, [poDoNotEncode]);
 
       RESTRequest1.Execute;
       JSONString := RESTResponse1.JSONValue.ToString;
@@ -929,8 +890,7 @@ begin
 end;
 
 // TODO Доделать процедуру редактирования сотрудника
-procedure TfmMain.gridEmployeeDblClickCell(Sender: TObject;
-  ARow, ACol: Integer);
+procedure TfmMain.gridEmployeeDblClickCell(Sender: TObject; ARow, ACol: Integer);
 begin
   // aaaModifyStyle(2);
   // fmModifyData.ShowModal;
@@ -946,8 +906,8 @@ procedure TfmMain.menuDeleteClick(Sender: TObject);
 begin
   if glModifyNode.Node.Text[TREE_NODE_ID] = '' then
   begin
-    if MessageDlg('Удалить шаблон "' + glModifyNode.Node.Text[TREE_NODE_CONTENT]
-      + '"?', mtConfirmation, mbOKCancel, 0) = mrOk then
+    if MessageDlg('Удалить шаблон "' + glModifyNode.Node.Text[TREE_NODE_CONTENT] + '"?',
+      mtConfirmation, mbOKCancel, 0) = mrOk then
       treeNode.RemoveNode(glModifyNode.Node);
   end
   else
@@ -963,8 +923,7 @@ begin
   if treeNodeRoot.SelectedNodeCount > 0 then
   begin
     NewString := 'Введите текст шаблона';
-    ClickedOK := InputQuery('Добавление нового узла', 'Текст шаблона',
-      NewString);
+    ClickedOK := InputQuery('Добавление нового узла', 'Текст шаблона', NewString);
     if ClickedOK = true then { NewString contains new input string. }
     begin
       CNode := treeNode.AddNode(nil);
@@ -997,8 +956,7 @@ begin
           CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
           CNode.Text[TREE_NODE_ENABLE] := TEXT_ACTIVE;
           CNode.Text[TREE_NODE_ID] := '';
-          CNode.Text[TREE_NODE_NEW_PARENT_ID] := glModifyNode.Node.Text
-            [TREE_NODE_ID];
+          CNode.Text[TREE_NODE_NEW_PARENT_ID] := glModifyNode.Node.Text[TREE_NODE_ID];
 
           treeNode.ExpandAll;
           // CNode.CollapsedIconNames[0, false] := 'FOLDER';
@@ -1007,8 +965,7 @@ begin
     end
     else
     begin
-      MessageDlg
-        ('Для добавления шаблона необходимо сохранить предыдущие изменения',
+      MessageDlg('Для добавления шаблона необходимо сохранить предыдущие изменения',
         mtInformation, [mbOK], 0);
     end;
 end;
@@ -1024,19 +981,18 @@ begin
     if aaaIsEmptyText(NewString, MSG_TEXT_TEMPLATE_EMPTY) = false then
     begin
       glModifyNode.Node.Text[TREE_NODE_CONTENT] := NewString;
-      glModifyNode.Node.Text[TREE_NODE_MODIFY_ID] := glModifyNode.Node.Text
-        [TREE_NODE_ID];
+      glModifyNode.Node.Text[TREE_NODE_MODIFY_ID] := glModifyNode.Node.Text[TREE_NODE_ID];
     end;
 end;
 
 procedure TfmMain.plMainTopClick(Sender: TObject);
 var
-  fmt:TFormatSettings;
+  fmt: TFormatSettings;
 begin
   GetLocaleFormatSettings(0, fmt);
-      fmt.ShortDateFormat := 'yyyy-MM-dd';
-      fmt.DateSeparator := '-';
-      fmMain.Caption := DateToStr(dateBirthday.Date, fmt);
+  fmt.ShortDateFormat := 'yyyy-MM-dd';
+  fmt.DateSeparator := '-';
+  fmMain.Caption := DateToStr(dateBirthday.Date, fmt);
 end;
 
 procedure TfmMain.tabEmployeeShow(Sender: TObject);
@@ -1069,8 +1025,7 @@ begin
     begin
       joItem := joItems.Items[i] as TJSONObject;
 
-      gridEmployee.Cells[GRID_EMPLOYEE_NAME, i + 1] :=
-        joItem.GetValue(JSON_NAME).Value;
+      gridEmployee.Cells[GRID_EMPLOYEE_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
 
       if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
         gridEmployee.Cells[GRID_EMPLOYEE_ENABLE, i + 1] := TEXT_ACTIVE
@@ -1080,8 +1035,7 @@ begin
       gridEmployee.Cells[GRID_EMPLOYEE_CREATED, i + 1] :=
         joItem.GetValue(JSON_CREATED).Value;
       // скрытый столбей, содержжит id
-      gridEmployee.Cells[GRID_EMPLOYEE_ID, i + 1] :=
-        joItem.GetValue(JSON_ID).Value;
+      gridEmployee.Cells[GRID_EMPLOYEE_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
     end;
   end;
   FreeAndNil(OriginalJSONObject);
@@ -1166,14 +1120,12 @@ begin
   end;
 end;
 
-procedure TfmMain.treeNodeNodeClick(Sender: TObject;
-  ANode: TAdvTreeViewVirtualNode);
+procedure TfmMain.treeNodeNodeClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
 begin
   glModifyNode := ANode;
 end;
 
-procedure TfmMain.treeNodeNodeDblClick(Sender: TObject;
-  ANode: TAdvTreeViewVirtualNode);
+procedure TfmMain.treeNodeNodeDblClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
 begin
   with fmModifyData do
   begin
@@ -1244,8 +1196,7 @@ begin
     for i := 0 to joItems.Count - 1 do
     begin
       joItem := joItems.Items[i] as TJSONObject;
-      if joItem.GetValue(JSON_ID).ToString = ANode.Node.Text[TREE_NODE_ROOT_ID]
-      then
+      if joItem.GetValue(JSON_ID).ToString = ANode.Node.Text[TREE_NODE_ROOT_ID] then
         aaaBuildTree(joItem.GetValue(JSON_ID).ToString, joItems, nil, treeNode);
     end;
     treeNode.ExpandAll;

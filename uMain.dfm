@@ -24,7 +24,6 @@ object fmMain: TfmMain
     Color = clBtnShadow
     ParentBackground = False
     TabOrder = 0
-    ExplicitHeight = 498
     object buttonSettings: TAdvGlassButton
       Left = 4
       Top = 126
@@ -82,8 +81,6 @@ object fmMain: TfmMain
       item
         Width = 50
       end>
-    ExplicitTop = 498
-    ExplicitWidth = 873
   end
   object plMainClient: TPanel
     Left = 70
@@ -96,8 +93,6 @@ object fmMain: TfmMain
     Color = clSilver
     ParentBackground = False
     TabOrder = 1
-    ExplicitWidth = 803
-    ExplicitHeight = 498
     object plMainTop: TPanel
       Left = 0
       Top = 0
@@ -110,7 +105,6 @@ object fmMain: TfmMain
       ParentBackground = False
       TabOrder = 0
       OnClick = plMainTopClick
-      ExplicitWidth = 803
     end
     object pageMain: TAdvPageControl
       Left = 0
@@ -140,8 +134,6 @@ object fmMain: TfmMain
         ColorTo = clNone
         TabColor = clBtnFace
         TabColorTo = clNone
-        ExplicitWidth = 795
-        ExplicitHeight = 432
         object plSettings: TPanel
           Left = 0
           Top = 0
@@ -153,8 +145,6 @@ object fmMain: TfmMain
           Color = clTeal
           ParentBackground = False
           TabOrder = 1
-          ExplicitWidth = 795
-          ExplicitHeight = 432
           object pageSettings: TAdvPageControl
             Left = 0
             Top = 0
@@ -183,8 +173,6 @@ object fmMain: TfmMain
               TabColor = clBtnFace
               TabColorTo = clNone
               OnShow = tabTreeShow
-              ExplicitWidth = 787
-              ExplicitHeight = 404
               object treeNodeRoot: TAdvTreeView
                 Left = 0
                 Top = 31
@@ -468,7 +456,6 @@ object fmMain: TfmMain
                   7B7D7B7B7D7B7B7D7B7B7D7B7B7D7B7B7D7B7B7D7B7B7D7B0000}
                 Version = '1.1.0.6'
                 OnAfterSelectNode = treeNodeRootAfterSelectNode
-                ExplicitHeight = 373
               end
               object treeNode: TAdvTreeView
                 Left = 265
@@ -880,8 +867,6 @@ object fmMain: TfmMain
                 Version = '1.1.0.6'
                 OnNodeClick = treeNodeNodeClick
                 OnNodeDblClick = treeNodeNodeDblClick
-                ExplicitWidth = 522
-                ExplicitHeight = 373
               end
               object plTemplateTop: TPanel
                 Left = 0
@@ -893,7 +878,6 @@ object fmMain: TfmMain
                 Caption = 'plTemplateTop'
                 ShowCaption = False
                 TabOrder = 2
-                ExplicitWidth = 787
                 object buttonNodeSave: TAdvGlassButton
                   Left = 174
                   Top = 2
@@ -1200,8 +1184,6 @@ object fmMain: TfmMain
           Color = clYellow
           ParentBackground = False
           TabOrder = 0
-          ExplicitWidth = 795
-          ExplicitHeight = 432
           object plPatientInsert: TPanel
             Left = 0
             Top = 31
@@ -1213,7 +1195,6 @@ object fmMain: TfmMain
             ParentBackground = False
             ShowCaption = False
             TabOrder = 0
-            ExplicitHeight = 401
             object ScrollBox1: TScrollBox
               Left = 0
               Top = 33
@@ -1227,7 +1208,6 @@ object fmMain: TfmMain
               Color = clBtnFace
               ParentColor = False
               TabOrder = 0
-              ExplicitHeight = 368
               object GroupBox2: TGroupBox
                 Left = 6
                 Top = 193
@@ -1481,9 +1461,9 @@ object fmMain: TfmMain
                   Width = 153
                   Height = 21
                   Style = csDropDownList
-                  ItemIndex = 0
+                  ItemIndex = 1
                   TabOrder = 4
-                  Text = #1046#1077#1085'.'
+                  Text = #1052#1091#1078'.'
                   Items.Strings = (
                     #1046#1077#1085'.'
                     #1052#1091#1078'.')
@@ -1685,6 +1665,33 @@ object fmMain: TfmMain
             PrintSettings.FooterFont.Name = 'Tahoma'
             PrintSettings.FooterFont.Style = []
             PrintSettings.PageNumSep = '/'
+            RowIndicator.Data = {
+              36030000424D3603000000000000360000002800000010000000100000000100
+              18000000000000030000120B0000120B00000000000000000000FB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB
+              00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB
+              00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFBA945DBA945DFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFBA
+              945DF2D2AFBA945DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFBA945DBA945DBA945DBA945DBA945DE8A962F4D4B1BA945DFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFBA945DF6D8B4F6D8B4F6D8B4F6
+              D8B4EDB069EDB069F6D8B4BA945DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFBA945DF2B870F2B870F2B870F2B870F2B870F2B870F2B870F9DCB8BA94
+              5DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFBA945DF7C077F7C077F7C077F7
+              C077F7C077F7C077F7C077BA945DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFBA945DBA945DBA945DBA945DBA945DFCC67DFCC67DBA945DFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFBA
+              945DFFCB81BA945DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFBA945DBA945DFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB
+              00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB
+              00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF}
             ScrollProportional = True
             ScrollSynch = True
             SearchFooter.Color = clBtnFace
@@ -1706,8 +1713,6 @@ object fmMain: TfmMain
             ShowSelection = False
             SortSettings.DefaultFormat = ssAutomatic
             Version = '8.1.3.0'
-            ExplicitWidth = 499
-            ExplicitHeight = 401
             ColWidths = (
               22
               197
@@ -1735,7 +1740,6 @@ object fmMain: TfmMain
             Caption = 'Panel2'
             ParentBackground = False
             TabOrder = 2
-            ExplicitWidth = 795
             object buttonPatientInsert: TAdvGlassButton
               Left = 6
               Top = 2
@@ -1787,6 +1791,15 @@ object fmMain: TfmMain
               OnClick = buttonPatientModifyClick
             end
           end
+        end
+        object plCards: TPanel
+          Left = 3
+          Top = 42
+          Width = 185
+          Height = 41
+          Caption = 'plCards'
+          ParentBackground = False
+          TabOrder = 2
         end
       end
       object tabLog: TAdvTabSheet
