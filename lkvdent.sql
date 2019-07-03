@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Хост: 127.0.0.1
--- Время создания: Июл 02 2019 г., 06:37
+-- Время создания: Июл 03 2019 г., 13:48
 -- Версия сервера: 10.1.32-MariaDB
 -- Версия PHP: 7.2.5
 
@@ -36,6 +36,13 @@ CREATE TABLE `tb_card` (
   `is_init_exam` tinyint(1) NOT NULL DEFAULT '0' COMMENT 'флаг первичного осмотра',
   `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+--
+-- Дамп данных таблицы `tb_card`
+--
+
+INSERT INTO `tb_card` (`id`, `patient_id`, `notes`, `employee_id`, `is_init_exam`, `created`) VALUES
+(2, 2, '', 3, 0, '2019-07-03 06:02:45');
 
 -- --------------------------------------------------------
 
@@ -104,7 +111,8 @@ INSERT INTO `tb_patient` (`id`, `fname`, `name`, `lname`, `birthday`, `sex`, `pr
 (1, 'Петренко', 'Федр', 'Александрович', '2019-06-01', 1, 'Ланшафтный дизайнер', 'г. Кокшетау', 'ул. Абая', 'д. 150', '+77771112233', '+77714445566', 'Длинная строка ограничением в 400 символов', '2019-06-21 12:02:32'),
 (2, 'Колько', 'Евгений', 'Яковлевич', '2019-07-01', 1, '', 'г. Кокшетау', '', '', '1112223344', '', 'null', '2019-06-24 08:37:14'),
 (3, 'Тыковка', 'Иван', '', '2019-07-01', 1, '', 'г. Кокшетау', '', '', '1112223344', '', '', '2019-06-24 08:39:27'),
-(4, 'Тымко', 'Иван', '', '0000-00-00', 1, '', 'г. Кокшетау', '', '', '1112223344', '', '', '2019-07-02 04:36:51');
+(4, 'Тымко', 'Иван', '', '2019-07-02', 1, '', 'г. Кокшетау', '', '', '1112223344', '', '', '2019-07-02 04:36:51'),
+(5, 'Фадеев', 'Афанасий', 'Литвинович', '1995-07-02', 1, 'Менчендайзер', 'г. Кокшетау', '', '', '', '', '', '2019-07-02 04:41:11');
 
 -- --------------------------------------------------------
 
@@ -137,10 +145,10 @@ INSERT INTO `tb_tree` (`id`, `parent_id`, `content`, `is_init_exam`, `is_enable`
 (10, 8, 'Длительная самопроизвольная боль', 0, 1),
 (16, 8, 'текст шаблона', 0, 1),
 (17, 9, 'Введите текст шаблона', 0, 1),
-(18, 7, 'Введите текст шаблона', 0, 1),
+(18, 16, '100', 0, 1),
 (19, 7, 'Введите текст шаблона', 0, 1),
-(20, 18, 'Введите шаблона', 0, 1),
-(21, 18, 'текст шаблона', 0, 1);
+(20, 18, '110', 0, 1),
+(21, 18, '120', 0, 1);
 
 --
 -- Триггеры `tb_tree`
@@ -196,10 +204,12 @@ CREATE TRIGGER `tree__au` AFTER UPDATE ON `tb_tree` FOR EACH ROW BEGIN
                 'An attempt to damage the integrity of the tree.';
     END IF;
 
+if new_path like old_path then
     -- Изменение пути у всего поддерева.
     UPDATE tb_tree_path
         SET path = REPLACE(path, old_path, new_path)
         WHERE path LIKE CONCAT(old_path, '%');
+        end if;
 END
 $$
 DELIMITER ;
@@ -247,6 +257,31 @@ INSERT INTO `tb_tree_path` (`id`, `path`) VALUES
 (4, '/4/'),
 (5, '/5/'),
 (6, '/6/');
+
+-- --------------------------------------------------------
+
+--
+-- Дублирующая структура для представления `vw_card`
+-- (См. Ниже фактическое представление)
+--
+CREATE TABLE `vw_card` (
+`id` int(10) unsigned
+,`patient_id` int(10) unsigned
+,`name` varchar(46)
+,`notes` varchar(400)
+,`em_name` varchar(40)
+,`is_init_exam` tinyint(1)
+,`created` timestamp
+);
+
+-- --------------------------------------------------------
+
+--
+-- Структура для представления `vw_card`
+--
+DROP TABLE IF EXISTS `vw_card`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`root`@`localhost` SQL SECURITY DEFINER VIEW `vw_card`  AS  select `cd`.`id` AS `id`,`cd`.`patient_id` AS `patient_id`,concat(`pt`.`fname`,' ',left(`pt`.`name`,1),'.',if((`pt`.`lname` = ''),'',' '),if((`pt`.`lname` = ''),'',left(`pt`.`lname`,1)),if((`pt`.`lname` = ''),'','.')) AS `name`,`cd`.`notes` AS `notes`,`em`.`name` AS `em_name`,`cd`.`is_init_exam` AS `is_init_exam`,`cd`.`created` AS `created` from ((`tb_card` `cd` join `tb_patient` `pt`) join `tb_employee` `em`) where ((`cd`.`id` = `pt`.`id`) and (`cd`.`employee_id` = `em`.`id`)) ;
 
 --
 -- Индексы сохранённых таблиц
@@ -302,7 +337,7 @@ ALTER TABLE `tb_tree_path`
 -- AUTO_INCREMENT для таблицы `tb_card`
 --
 ALTER TABLE `tb_card`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT для таблицы `tb_cards_tree`
@@ -320,7 +355,7 @@ ALTER TABLE `tb_employee`
 -- AUTO_INCREMENT для таблицы `tb_patient`
 --
 ALTER TABLE `tb_patient`
-  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT для таблицы `tb_tree`

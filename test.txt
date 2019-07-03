@@ -88,3 +88,18 @@ FOR EACH ROW BEGIN
 						 )) <> 0)
     END IF
 END
+
+BEGIN
+IF NEW.is_init_exam = 1 THEN
+    	UPDATE tb_tree_path
+        SET is_init_exam = 1
+        WHERE id in (SELECT t.id
+						 FROM tb_tree_path tp
+						 JOIN tb_tree t ON tp.id = t.id
+						 WHERE LOCATE(tp.path,(
+                         	SELECT tp2.path
+						    FROM tb_tree_path tp2
+						    WHERE tp2.id = NEW.id -- Идентификатор корня дерева.
+						 )) <> 0)
+    END IF
+END

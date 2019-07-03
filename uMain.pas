@@ -1,5 +1,5 @@
 unit uMain;
-
+
 interface
 
 uses
@@ -100,7 +100,15 @@ type
     pageMain: TAdvPageControl;
     tabApplication: TAdvTabSheet;
     tabLog: TAdvTabSheet;
-    plCards: TPanel;
+    plCardList: TPanel;
+    gridCards: TAdvStringGrid;
+    Panel1: TPanel;
+    AdvGlassButton1: TAdvGlassButton;
+    AdvGlassButton3: TAdvGlassButton;
+    AdvGlassButton5: TAdvGlassButton;
+    buttonCards: TAdvGlassButton;
+    AdvGlassButton6: TAdvGlassButton;
+    plCardModify: TPanel;
     procedure tabEmployeeShow(Sender: TObject);
     procedure tabTreeShow(Sender: TObject);
     procedure treeNodeRootAfterSelectNode(Sender: TObject;
@@ -114,6 +122,7 @@ type
     procedure aaaPatientFieldClear;
     procedure aaaPatientRefresh;
     procedure aaaPatientFilter(FilterStr: String; FCol: SmallInt);
+    procedure aaaCardRefresh(patient_id: String);
 
     procedure treeNodeMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
       X, Y: Integer);
@@ -138,6 +147,7 @@ type
     procedure buttonPatientSaveClick(Sender: TObject);
     procedure buttonPatientCancelClick(Sender: TObject);
     procedure editFNameChange(Sender: TObject);
+    procedure buttonCardsClick(Sender: TObject);
   private
     { Private declarations }
     insertParentId, insertContent, insertInitExam, insertEnable: TStrings;
@@ -178,6 +188,13 @@ const
   GRID_PATIENT_PHONE2 = 11;
   GRID_PATIENT_NOTES = 12;
   GRID_PATIENT_CREATED = 13;
+
+  GRID_CARD_ID = 5;
+  GRID_CARD_PATIENT_ID = 6;
+  GRID_CARD_NAME = 2;
+  GRID_CARD_NOTES = 4;
+  GRID_CARD_EMPLOYEE_NAME = 3;
+  GRID_CARD_CREATED = 1;
 
   TREE_NODE_ROOT_ID = 1;
   TREE_NODE_ROOT_CONTENT = 0;
@@ -223,6 +240,9 @@ const
   JSON_PHONE1 = 'phone1';
   JSON_PHONE2 = 'phone2';
   JSON_NOTES = 'notes';
+
+  JSON_PATIENT_ID = 'patient_id';
+  JSON_EMNAME = 'em_name';
 
   MSG_TEXT_TEMPLATE_EMPTY = 'Поле "' + TEXT_NAME_TEMPLATE + '" не должно быть пустым!';
   MSG_TEXT_EMPLOYEE_EMPTY = 'Поле "' + TEXT_NAME_EMPLOYEE + '" не должно быть пустым!';
@@ -277,8 +297,6 @@ end;
 // рекрусивная процедура проходится по нашим шабланом и ищем измененные и добавленные
 // узлы, храним их в глобальных переменных
 procedure TfmMain.aaaSearchModifyNode(PNode: TAdvTreeViewNode);
-var
-  i: Integer;
 begin
   while PNode <> nil do
   begin
@@ -392,9 +410,6 @@ var
   JSONString: String;
   error: Boolean;
   i: Integer;
-  j: Integer;
-
-  col: TStrings;
 begin
   gridPatient.BeginUpdate;
   with dmDataModule do
@@ -456,7 +471,7 @@ begin
         gridPatient.Cells[GRID_PATIENT_CREATED, i + 1] :=
           joItem.GetValue(JSON_CREATED).Value;
         // скрытый столбей, содержжит id
-        gridPatient.Cells[GRID_PATIENT_ID, i + 1] := joItem.GetValue('id').Value;
+        gridPatient.Cells[GRID_PATIENT_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
       end;
     end;
   end;
@@ -487,9 +502,86 @@ begin
   end;
 
   gridPatient.FilterActive := true;
-  if (gridPatient.VisibleRowCount=1) and (gridPatient.Cells[FCol,1]=gridPatient.ColumnHeaders[1])  then
-    gridPatient.FilterActive:= false;
+  if (gridPatient.VisibleRowCount = 1) and
+    (gridPatient.Cells[FCol, 1] = gridPatient.ColumnHeaders[1]) then
+    gridPatient.FilterActive := false;
 
+end;
+
+procedure TfmMain.aaaCardRefresh(patient_id: String);
+var
+  OriginalJSONObject: TJSONObject;
+  joItems: TJSONArray;
+  joItem: TJSONObject;
+
+  JSONString: String;
+  error: Boolean;
+  i: Integer;
+
+begin
+  gridCards.BeginUpdate;
+  with dmDataModule do
+  begin
+    RESTRequest1.Method := rmGET;
+    RESTRequest1.Resource := 'card/' + patient_id;
+    RESTRequest1.Params.Clear;
+    RESTRequest1.Execute;
+    JSONString := RESTResponse1.JSONValue.ToString;
+    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+  end;
+
+  error := OriginalJSONObject.GetValue('error') is TJSONTrue;
+  if error = false then
+  begin
+    // если карточек у пациента нет то JSONString = 'null'
+    // если там хоть что то есть то вернет ''
+    JSONString := OriginalJSONObject.GetValue('response').Value;
+    if JSONString = '' then
+    begin
+      joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
+
+      if joItems.Count <> 0 then
+      begin
+        gridCards.RowCount := joItems.Count + 1;
+
+        for i := 0 to joItems.Count - 1 do
+        begin
+          joItem := joItems.Items[i] as TJSONObject;
+
+          gridCards.Cells[GRID_CARD_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
+
+          gridCards.Cells[GRID_CARD_NOTES, i + 1] := joItem.GetValue(JSON_NOTES).Value;
+
+          gridCards.Cells[GRID_CARD_EMPLOYEE_NAME, i + 1] :=
+            joItem.GetValue(JSON_EMNAME).Value;
+
+          gridCards.Cells[GRID_CARD_CREATED, i + 1] :=
+            joItem.GetValue(JSON_CREATED).Value;
+
+          gridCards.Cells[GRID_CARD_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
+
+          gridCards.Cells[GRID_CARD_PATIENT_ID, i + 1] :=
+            joItem.GetValue(JSON_PATIENT_ID).Value;
+        end;
+
+      end;
+
+    end;
+
+  end;
+
+  FreeAndNil(OriginalJSONObject);
+  // gridPatient.AutoSize:=true;
+  gridCards.AutoSizeColumns(false);
+  if gridCards.ColWidths[GRID_CARD_NAME] < 150 then
+    gridCards.ColWidths[GRID_CARD_NAME] := 150;
+  if gridCards.ColWidths[GRID_CARD_NOTES] < 150 then
+    gridCards.ColWidths[GRID_CARD_NOTES] := 150;
+  if gridCards.ColWidths[GRID_CARD_EMPLOYEE_NAME] < 150 then
+    gridCards.ColWidths[GRID_CARD_EMPLOYEE_NAME] := 150;
+  // gridPatient.ColWidths[GRID_PATIENT_NOTES]:=200;
+  gridCards.ColWidths[GRID_CARD_CREATED] := 130;
+  gridCards.EndUpdate;
 end;
 
 procedure TfmMain.buttonPatientModifyClick(Sender: TObject);
@@ -704,6 +796,17 @@ begin
   aaaPatientFieldClear;
 end;
 
+procedure TfmMain.buttonCardsClick(Sender: TObject);
+var
+  s: String;
+begin
+  plPatient.Visible := false;
+  plSettings.Visible := false;
+  plCardList.Visible := true;
+  s := gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]];
+  aaaCardRefresh(s);
+end;
+
 procedure TfmMain.buttonEmployeeInsertClick(Sender: TObject);
 begin
   with fmModifyData do
@@ -869,6 +972,8 @@ procedure TfmMain.buttonPatientClick(Sender: TObject);
 begin
   plPatient.Visible := true;
   plSettings.Visible := false;
+  plCardList.Visible := false;
+  plPatientInsert.Visible := false;
   aaaPatientRefresh
 end;
 
@@ -876,6 +981,7 @@ procedure TfmMain.buttonSettingsClick(Sender: TObject);
 begin
   plPatient.Visible := false;
   plSettings.Visible := true;
+  plCardList.Visible := false;
 end;
 
 procedure TfmMain.editFNameChange(Sender: TObject);
@@ -1060,7 +1166,6 @@ var
   JSONString: String;
   error: Boolean;
   i: Integer;
-  j: Integer;
 
   Node: TAdvTreeViewNode;
 begin
@@ -1206,3 +1311,4 @@ begin
 end;
 
 end.
+

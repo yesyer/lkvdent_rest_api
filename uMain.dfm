@@ -3,7 +3,7 @@ object fmMain: TfmMain
   Top = 0
   Caption = 'fmMain'
   ClientHeight = 503
-  ClientWidth = 825
+  ClientWidth = 784
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -24,11 +24,15 @@ object fmMain: TfmMain
     Color = clBtnShadow
     ParentBackground = False
     TabOrder = 0
+    DesignSize = (
+      70
+      484)
     object buttonSettings: TAdvGlassButton
       Left = 4
-      Top = 126
+      Top = 336
       Width = 60
       Height = 60
+      Anchors = [akLeft, akBottom]
       BackColor = clWhite
       Caption = 'Settings'
       Font.Charset = DEFAULT_CHARSET
@@ -68,11 +72,33 @@ object fmMain: TfmMain
       Version = '1.3.0.2'
       OnClick = buttonPatientClick
     end
+    object AdvGlassButton5: TAdvGlassButton
+      Left = 4
+      Top = 402
+      Width = 60
+      Height = 60
+      Anchors = [akLeft, akBottom]
+      BackColor = clWhite
+      Caption = #1042#1099#1093#1086#1076
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Style = []
+      ForeColor = clBtnFace
+      GlowColor = 16760205
+      InnerBorderColor = clGrayText
+      OuterBorderColor = clBtnShadow
+      ParentFont = False
+      ShineColor = clWhite
+      TabOrder = 2
+      Version = '1.3.0.2'
+    end
   end
   object StatusBar1: TStatusBar
     Left = 0
     Top = 484
-    Width = 825
+    Width = 784
     Height = 19
     Panels = <
       item
@@ -81,11 +107,12 @@ object fmMain: TfmMain
       item
         Width = 50
       end>
+    ExplicitWidth = 825
   end
   object plMainClient: TPanel
     Left = 70
     Top = 0
-    Width = 755
+    Width = 714
     Height = 484
     Align = alClient
     BevelOuter = bvNone
@@ -93,10 +120,11 @@ object fmMain: TfmMain
     Color = clSilver
     ParentBackground = False
     TabOrder = 1
+    ExplicitWidth = 755
     object plMainTop: TPanel
       Left = 0
       Top = 0
-      Width = 755
+      Width = 714
       Height = 40
       Align = alTop
       BevelOuter = bvNone
@@ -105,11 +133,12 @@ object fmMain: TfmMain
       ParentBackground = False
       TabOrder = 0
       OnClick = plMainTopClick
+      ExplicitWidth = 755
     end
     object pageMain: TAdvPageControl
       Left = 0
       Top = 40
-      Width = 755
+      Width = 714
       Height = 444
       ActivePage = tabApplication
       ActiveFont.Charset = DEFAULT_CHARSET
@@ -134,10 +163,11 @@ object fmMain: TfmMain
         ColorTo = clNone
         TabColor = clBtnFace
         TabColorTo = clNone
+        ExplicitWidth = 747
         object plSettings: TPanel
           Left = 0
           Top = 0
-          Width = 747
+          Width = 706
           Height = 418
           Align = alClient
           BevelOuter = bvNone
@@ -145,10 +175,11 @@ object fmMain: TfmMain
           Color = clTeal
           ParentBackground = False
           TabOrder = 1
+          ExplicitWidth = 747
           object pageSettings: TAdvPageControl
             Left = 0
             Top = 0
-            Width = 747
+            Width = 706
             Height = 418
             ActivePage = tabEmployee
             ActiveFont.Charset = DEFAULT_CHARSET
@@ -166,6 +197,7 @@ object fmMain: TfmMain
             PersistPagesState.Location = plRegistry
             PersistPagesState.Enabled = False
             TabOrder = 0
+            ExplicitWidth = 747
             object tabTree: TAdvTabSheet
               Caption = '  '#1064#1072#1073#1083#1086#1085#1099' '
               Color = clBtnFace
@@ -173,6 +205,7 @@ object fmMain: TfmMain
               TabColor = clBtnFace
               TabColorTo = clNone
               OnShow = tabTreeShow
+              ExplicitWidth = 739
               object treeNodeRoot: TAdvTreeView
                 Left = 0
                 Top = 31
@@ -460,7 +493,7 @@ object fmMain: TfmMain
               object treeNode: TAdvTreeView
                 Left = 265
                 Top = 31
-                Width = 474
+                Width = 433
                 Height = 359
                 Align = alClient
                 Color = clWhite
@@ -867,17 +900,19 @@ object fmMain: TfmMain
                 Version = '1.1.0.6'
                 OnNodeClick = treeNodeNodeClick
                 OnNodeDblClick = treeNodeNodeDblClick
+                ExplicitWidth = 474
               end
               object plTemplateTop: TPanel
                 Left = 0
                 Top = 0
-                Width = 739
+                Width = 698
                 Height = 31
                 Align = alTop
                 BevelOuter = bvNone
                 Caption = 'plTemplateTop'
                 ShowCaption = False
                 TabOrder = 2
+                ExplicitWidth = 739
                 object buttonNodeSave: TAdvGlassButton
                   Left = 174
                   Top = 2
@@ -980,10 +1015,11 @@ object fmMain: TfmMain
               TabColor = clBtnFace
               TabColorTo = clNone
               OnShow = tabEmployeeShow
+              ExplicitWidth = 739
               object gridEmployee: TAdvStringGrid
                 Left = 0
                 Top = 31
-                Width = 739
+                Width = 698
                 Height = 359
                 Cursor = crDefault
                 Align = alClient
@@ -1109,6 +1145,7 @@ object fmMain: TfmMain
                 ShowSelection = False
                 SortSettings.DefaultFormat = ssAutomatic
                 Version = '8.1.3.0'
+                ExplicitWidth = 739
                 ColWidths = (
                   22
                   197
@@ -1118,12 +1155,13 @@ object fmMain: TfmMain
               object plEmployeeTop: TPanel
                 Left = 0
                 Top = 0
-                Width = 739
+                Width = 698
                 Height = 31
                 Align = alTop
                 BevelOuter = bvNone
                 Caption = 'plEmployeeTop'
                 TabOrder = 1
+                ExplicitWidth = 739
                 object AdvGlassButton2: TAdvGlassButton
                   Left = 88
                   Top = 2
@@ -1176,7 +1214,7 @@ object fmMain: TfmMain
         object plPatient: TPanel
           Left = 0
           Top = 0
-          Width = 747
+          Width = 706
           Height = 418
           Align = alClient
           BevelOuter = bvNone
@@ -1184,6 +1222,7 @@ object fmMain: TfmMain
           Color = clYellow
           ParentBackground = False
           TabOrder = 0
+          ExplicitWidth = 747
           object plPatientInsert: TPanel
             Left = 0
             Top = 31
@@ -1547,7 +1586,7 @@ object fmMain: TfmMain
           object gridPatient: TAdvStringGrid
             Left = 296
             Top = 31
-            Width = 451
+            Width = 410
             Height = 387
             Cursor = crDefault
             Align = alClient
@@ -1713,6 +1752,9 @@ object fmMain: TfmMain
             ShowSelection = False
             SortSettings.DefaultFormat = ssAutomatic
             Version = '8.1.3.0'
+            ExplicitLeft = 302
+            ExplicitTop = 37
+            ExplicitWidth = 451
             ColWidths = (
               22
               197
@@ -1733,13 +1775,14 @@ object fmMain: TfmMain
           object Panel2: TPanel
             Left = 0
             Top = 0
-            Width = 747
+            Width = 706
             Height = 31
             Align = alTop
             BevelOuter = bvNone
             Caption = 'Panel2'
             ParentBackground = False
             TabOrder = 2
+            ExplicitWidth = 747
             object buttonPatientInsert: TAdvGlassButton
               Left = 6
               Top = 2
@@ -1790,16 +1833,318 @@ object fmMain: TfmMain
               Version = '1.3.0.2'
               OnClick = buttonPatientModifyClick
             end
+            object buttonCards: TAdvGlassButton
+              Left = 178
+              Top = 2
+              Width = 80
+              Height = 25
+              BackColor = clWhite
+              Caption = #1052#1077#1076'. '#1082#1072#1088#1090#1072'...'
+              CornerRadius = 2
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              ForeColor = clBtnFace
+              GlowColor = clGray
+              InnerBorderColor = clGrayText
+              OuterBorderColor = clBtnFace
+              ParentFont = False
+              ParentBiDiMode = False
+              ShineColor = clWhite
+              TabOrder = 2
+              Version = '1.3.0.2'
+              OnClick = buttonCardsClick
+            end
           end
         end
-        object plCards: TPanel
-          Left = 3
-          Top = 42
-          Width = 185
-          Height = 41
-          Caption = 'plCards'
+        object plCardList: TPanel
+          Left = 0
+          Top = 0
+          Width = 706
+          Height = 418
+          Align = alClient
+          BevelOuter = bvNone
+          Caption = 'plCardList'
+          Color = clHotLight
           ParentBackground = False
           TabOrder = 2
+          ExplicitLeft = 3
+          ExplicitTop = 42
+          ExplicitWidth = 185
+          ExplicitHeight = 41
+          object gridCards: TAdvStringGrid
+            Left = 0
+            Top = 31
+            Width = 706
+            Height = 387
+            Cursor = crDefault
+            Align = alClient
+            ColCount = 7
+            Ctl3D = True
+            DrawingStyle = gdsClassic
+            Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing]
+            ParentCtl3D = False
+            ScrollBars = ssBoth
+            TabOrder = 0
+            ActiveRowShow = True
+            HoverRowCells = [hcNormal, hcSelected]
+            OnDblClickCell = gridEmployeeDblClickCell
+            ActiveCellFont.Charset = DEFAULT_CHARSET
+            ActiveCellFont.Color = clWindowText
+            ActiveCellFont.Height = -11
+            ActiveCellFont.Name = 'Tahoma'
+            ActiveCellFont.Style = [fsBold]
+            ColumnHeaders.Strings = (
+              ''
+              #1044#1072#1090#1072' '#1087#1088#1080#1077#1084#1072
+              #1060#1072#1084#1080#1083#1080#1103' '#1048'.'#1054'.'
+              #1042#1088#1072#1095
+              #1055#1088#1080#1084#1080#1095#1072#1085#1080#1077
+              'id'
+              'parent_id')
+            ColumnSize.Location = clIniFile
+            ControlLook.FixedGradientFrom = clBtnFace
+            ControlLook.FixedGradientHoverFrom = 15000287
+            ControlLook.FixedGradientHoverTo = 14406605
+            ControlLook.FixedGradientHoverMirrorFrom = 14406605
+            ControlLook.FixedGradientHoverMirrorTo = 13813180
+            ControlLook.FixedGradientHoverBorder = 12033927
+            ControlLook.FixedGradientDownFrom = 14991773
+            ControlLook.FixedGradientDownTo = 14991773
+            ControlLook.FixedGradientDownMirrorFrom = 14991773
+            ControlLook.FixedGradientDownMirrorTo = 14991773
+            ControlLook.FixedGradientDownBorder = 14991773
+            ControlLook.DropDownHeader.Font.Charset = DEFAULT_CHARSET
+            ControlLook.DropDownHeader.Font.Color = clWindowText
+            ControlLook.DropDownHeader.Font.Height = -11
+            ControlLook.DropDownHeader.Font.Name = 'Tahoma'
+            ControlLook.DropDownHeader.Font.Style = []
+            ControlLook.DropDownHeader.Visible = True
+            ControlLook.DropDownHeader.Buttons = <>
+            ControlLook.DropDownFooter.Font.Charset = DEFAULT_CHARSET
+            ControlLook.DropDownFooter.Font.Color = clWindowText
+            ControlLook.DropDownFooter.Font.Height = -11
+            ControlLook.DropDownFooter.Font.Name = 'Tahoma'
+            ControlLook.DropDownFooter.Font.Style = []
+            ControlLook.DropDownFooter.Visible = True
+            ControlLook.DropDownFooter.Buttons = <>
+            EnhRowColMove = False
+            Filter = <>
+            FilterDropDown.Font.Charset = DEFAULT_CHARSET
+            FilterDropDown.Font.Color = clWindowText
+            FilterDropDown.Font.Height = -11
+            FilterDropDown.Font.Name = 'Tahoma'
+            FilterDropDown.Font.Style = []
+            FilterDropDown.TextChecked = 'Checked'
+            FilterDropDown.TextUnChecked = 'Unchecked'
+            FilterDropDownMultiCol = False
+            FilterDropDownClear = '(All)'
+            FilterEdit.TypeNames.Strings = (
+              'Starts with'
+              'Ends with'
+              'Contains'
+              'Not contains'
+              'Equal'
+              'Not equal'
+              'Larger than'
+              'Smaller than'
+              'Clear')
+            FixedColWidth = 22
+            FixedRowHeight = 22
+            FixedColAlways = True
+            FixedFont.Charset = DEFAULT_CHARSET
+            FixedFont.Color = clBlack
+            FixedFont.Height = -11
+            FixedFont.Name = 'Tahoma'
+            FixedFont.Style = []
+            FloatFormat = '%.2f'
+            HoverButtons.Buttons = <>
+            HoverButtons.Position = hbLeftFromColumnLeft
+            HTMLSettings.ImageFolder = 'images'
+            HTMLSettings.ImageBaseName = 'img'
+            Look = glCustom
+            PrintSettings.DateFormat = 'dd/mm/yyyy'
+            PrintSettings.Font.Charset = DEFAULT_CHARSET
+            PrintSettings.Font.Color = clWindowText
+            PrintSettings.Font.Height = -11
+            PrintSettings.Font.Name = 'Tahoma'
+            PrintSettings.Font.Style = []
+            PrintSettings.FixedFont.Charset = DEFAULT_CHARSET
+            PrintSettings.FixedFont.Color = clWindowText
+            PrintSettings.FixedFont.Height = -11
+            PrintSettings.FixedFont.Name = 'Tahoma'
+            PrintSettings.FixedFont.Style = []
+            PrintSettings.HeaderFont.Charset = DEFAULT_CHARSET
+            PrintSettings.HeaderFont.Color = clWindowText
+            PrintSettings.HeaderFont.Height = -11
+            PrintSettings.HeaderFont.Name = 'Tahoma'
+            PrintSettings.HeaderFont.Style = []
+            PrintSettings.FooterFont.Charset = DEFAULT_CHARSET
+            PrintSettings.FooterFont.Color = clWindowText
+            PrintSettings.FooterFont.Height = -11
+            PrintSettings.FooterFont.Name = 'Tahoma'
+            PrintSettings.FooterFont.Style = []
+            PrintSettings.PageNumSep = '/'
+            RowIndicator.Data = {
+              36030000424D3603000000000000360000002800000010000000100000000100
+              18000000000000030000120B0000120B00000000000000000000FB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB
+              00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB
+              00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFBA945DBA945DFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFBA
+              945DF2D2AFBA945DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFBA945DBA945DBA945DBA945DBA945DE8A962F4D4B1BA945DFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFBA945DF6D8B4F6D8B4F6D8B4F6
+              D8B4EDB069EDB069F6D8B4BA945DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFBA945DF2B870F2B870F2B870F2B870F2B870F2B870F2B870F9DCB8BA94
+              5DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFBA945DF7C077F7C077F7C077F7
+              C077F7C077F7C077F7C077BA945DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFBA945DBA945DBA945DBA945DBA945DFCC67DFCC67DBA945DFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFBA
+              945DFFCB81BA945DFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFBA945DBA945DFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB
+              00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF
+              FB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00
+              FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB
+              00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FFFB00FF}
+            ScrollProportional = True
+            ScrollSynch = True
+            SearchFooter.Color = clBtnFace
+            SearchFooter.FindNextCaption = 'Find &next'
+            SearchFooter.FindPrevCaption = 'Find &previous'
+            SearchFooter.Font.Charset = DEFAULT_CHARSET
+            SearchFooter.Font.Color = clWindowText
+            SearchFooter.Font.Height = -11
+            SearchFooter.Font.Name = 'Tahoma'
+            SearchFooter.Font.Style = []
+            SearchFooter.HighLightCaption = 'Highlight'
+            SearchFooter.HintClose = 'Close'
+            SearchFooter.HintFindNext = 'Find next occurrence'
+            SearchFooter.HintFindPrev = 'Find previous occurrence'
+            SearchFooter.HintHighlight = 'Highlight occurrences'
+            SearchFooter.MatchCaseCaption = 'Match case'
+            SelectionColor = clInfoBk
+            SelectionTextColor = clBtnText
+            ShowSelection = False
+            SortSettings.DefaultFormat = ssAutomatic
+            Version = '8.1.3.0'
+            ExplicitLeft = 1
+            ExplicitTop = 1
+            ExplicitWidth = 745
+            ExplicitHeight = 416
+            ColWidths = (
+              22
+              197
+              144
+              135
+              96
+              64
+              64)
+          end
+          object Panel1: TPanel
+            Left = 0
+            Top = 0
+            Width = 706
+            Height = 31
+            Align = alTop
+            BevelOuter = bvNone
+            Caption = 'Panel2'
+            ParentBackground = False
+            TabOrder = 1
+            ExplicitWidth = 747
+            object AdvGlassButton1: TAdvGlassButton
+              Left = 6
+              Top = 2
+              Width = 80
+              Height = 25
+              BackColor = clWhite
+              Caption = #1053#1072#1079#1072#1076
+              CornerRadius = 2
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              ForeColor = clBtnFace
+              GlowColor = clGray
+              InnerBorderColor = clGrayText
+              OuterBorderColor = clBtnFace
+              ParentFont = False
+              ParentBiDiMode = False
+              ShineColor = clWhite
+              TabOrder = 0
+              Version = '1.3.0.2'
+            end
+            object AdvGlassButton3: TAdvGlassButton
+              Left = 178
+              Top = 2
+              Width = 80
+              Height = 25
+              BackColor = clWhite
+              Caption = #1048#1079#1084#1077#1085#1080#1090#1100'...'
+              CornerRadius = 2
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              ForeColor = clBtnFace
+              GlowColor = clGray
+              InnerBorderColor = clGrayText
+              OuterBorderColor = clBtnFace
+              ParentFont = False
+              ParentBiDiMode = False
+              ShineColor = clWhite
+              TabOrder = 1
+              Version = '1.3.0.2'
+            end
+            object AdvGlassButton6: TAdvGlassButton
+              Left = 92
+              Top = 2
+              Width = 80
+              Height = 25
+              BackColor = clWhite
+              Caption = #1044#1086#1073#1072#1074#1080#1090#1100'...'
+              CornerRadius = 2
+              Font.Charset = DEFAULT_CHARSET
+              Font.Color = clWindowText
+              Font.Height = -11
+              Font.Name = 'Tahoma'
+              Font.Style = []
+              ForeColor = clBtnFace
+              GlowColor = clGray
+              InnerBorderColor = clGrayText
+              OuterBorderColor = clBtnFace
+              ParentFont = False
+              ParentBiDiMode = False
+              ShineColor = clWhite
+              TabOrder = 2
+              Version = '1.3.0.2'
+            end
+          end
+        end
+        object plCardModify: TPanel
+          Left = 0
+          Top = 0
+          Width = 706
+          Height = 418
+          Align = alClient
+          BevelOuter = bvNone
+          Caption = 'plCardModify'
+          Color = clOlive
+          ParentBackground = False
+          TabOrder = 3
+          ExplicitLeft = 136
+          ExplicitTop = 93
+          ExplicitWidth = 185
+          ExplicitHeight = 41
         end
       end
       object tabLog: TAdvTabSheet
@@ -1808,6 +2153,7 @@ object fmMain: TfmMain
         ColorTo = clNone
         TabColor = clBtnFace
         TabColorTo = clNone
+        ExplicitWidth = 747
       end
     end
   end
