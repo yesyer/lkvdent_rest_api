@@ -5,7 +5,8 @@ object dmDataModule: TdmDataModule
   object RESTClient1: TRESTClient
     Accept = 'application/json, text/plain; q=0.9, text/html;q=0.8,'
     AcceptCharset = 'UTF-8, *;q=0.8'
-    BaseURL = 'http://localhost/lkvdent/api'
+    BaseURL = 'http://localhost/lkvdent/v3/public'
+    ContentType = 'application/x-www-form-urlencoded'
     Params = <>
     HandleRedirects = True
     Left = 40
@@ -21,7 +22,7 @@ object dmDataModule: TdmDataModule
     Top = 56
   end
   object RESTResponse1: TRESTResponse
-    ContentType = 'text/html'
+    ContentType = 'application/json'
     Left = 40
     Top = 104
   end
@@ -29,7 +30,7 @@ object dmDataModule: TdmDataModule
     Left = 38
     Top = 152
     Bitmap = {
-      494C010101000800180010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008001C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

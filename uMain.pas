@@ -13,6 +13,10 @@ uses
   System.Classes,
   Vcl.Controls,
   Vcl.Dialogs,
+  Vcl.Graphics,
+  Vcl.Mask,
+  System.Types,
+  uContent,
 
   System.JSON,
   REST.Types,
@@ -29,7 +33,9 @@ uses
   AdvCustomTreeView,
   AdvTreeView,
   Vcl.Menus,
-  AdvMenus, Vcl.Mask, AdvDateTimePicker;
+  AdvMenus,
+  AdvDateTimePicker,
+  AdvGlowButton, AdvSplitter;
 
 type
   TfmMain = class(TForm)
@@ -45,9 +51,9 @@ type
     tabTree: TAdvTabSheet;
     tabEmployee: TAdvTabSheet;
     plEmployeeTop: TPanel;
-    AdvGlassButton2: TAdvGlassButton;
-    treeNodeRoot: TAdvTreeView;
-    treeNode: TAdvTreeView;
+    buttonEmployeeModify: TAdvGlassButton;
+    treeNodeRootSetting: TAdvTreeView;
+    treeNodeSetting: TAdvTreeView;
     treeMenu: TAdvPopupMenu;
     menuInsertSubnode: TMenuItem;
     menuModity: TMenuItem;
@@ -100,43 +106,54 @@ type
     pageMain: TAdvPageControl;
     tabApplication: TAdvTabSheet;
     tabLog: TAdvTabSheet;
-    plCardList: TPanel;
-    gridCards: TAdvStringGrid;
+    plPatientCardList: TPanel;
+    gridCardList: TAdvStringGrid;
     Panel1: TPanel;
-    AdvGlassButton1: TAdvGlassButton;
+    buttonPatientCardListBack: TAdvGlassButton;
     AdvGlassButton3: TAdvGlassButton;
     AdvGlassButton5: TAdvGlassButton;
-    buttonCards: TAdvGlassButton;
+    buttonPatientCardList: TAdvGlassButton;
+    buttonPatientCardInsert: TAdvGlassButton;
+    plPatientCardModify: TPanel;
+    plCardModifyMainTop: TPanel;
+    gridCard: TAdvStringGrid;
+    treeNodeCard: TAdvTreeView;
+    plTooths: TPanel;
+    btnToothTmp: TAdvGlassButton;
+    plCardModifyMainClient: TPanel;
+    Panel5: TPanel;
+    treeNodeRootCard: TAdvTreeView;
+    buttonPatientCardModifyBack: TAdvGlassButton;
+    AdvGlassButton2: TAdvGlassButton;
     AdvGlassButton6: TAdvGlassButton;
-    plCardModify: TPanel;
+    Splitter1: TSplitter;
     procedure tabEmployeeShow(Sender: TObject);
     procedure tabTreeShow(Sender: TObject);
-    procedure treeNodeRootAfterSelectNode(Sender: TObject;
+    procedure treeNodeRootSettingAfterSelectNode(Sender: TObject;
       ANode: TAdvTreeViewVirtualNode);
 
-    procedure aaaBuildTree(id: String; joItems: TJSONArray; PNode: TAdvTreeViewNode;
-      TTree: TAdvTreeView);
     procedure aaaSearchModifyNode(PNode: TAdvTreeViewNode);
     function aaaIsEmptyText(s, msg: String): Boolean;
     procedure aaaModifyStyle(s: ShortInt);
     procedure aaaPatientFieldClear;
-    procedure aaaPatientRefresh;
     procedure aaaPatientFilter(FilterStr: String; FCol: SmallInt);
     procedure aaaCardRefresh(patient_id: String);
+    procedure aaaToothButtonsSet;
 
-    procedure treeNodeMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState;
-      X, Y: Integer);
+    procedure treeNodeSettingMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure menuInsertNodeClick(Sender: TObject);
     procedure menuInsertSubnodeClick(Sender: TObject);
     procedure menuModityClick(Sender: TObject);
-    procedure treeNodeNodeDblClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
+    procedure treeNodeSettingNodeDblClick(Sender: TObject;
+      ANode: TAdvTreeViewVirtualNode);
     procedure buttonNodeSaveClick(Sender: TObject);
     procedure buttonNodeCancelClick(Sender: TObject);
     procedure menuDeleteClick(Sender: TObject);
     procedure buttonEmployeeInsertClick(Sender: TObject);
     procedure gridEmployeeDblClickCell(Sender: TObject; ARow, ACol: Integer);
     procedure buttonNodeInsertClick(Sender: TObject);
-    procedure treeNodeNodeClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
+    procedure treeNodeSettingNodeClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
     procedure buttonSettingsClick(Sender: TObject);
     procedure buttonPatientClick(Sender: TObject);
     procedure plMainTopClick(Sender: TObject);
@@ -147,7 +164,16 @@ type
     procedure buttonPatientSaveClick(Sender: TObject);
     procedure buttonPatientCancelClick(Sender: TObject);
     procedure editFNameChange(Sender: TObject);
-    procedure buttonCardsClick(Sender: TObject);
+    procedure buttonPatientCardListClick(Sender: TObject);
+    procedure buttonEmployeeModifyClick(Sender: TObject);
+    procedure buttonPatientCardListBackClick(Sender: TObject);
+    procedure buttonPatientCardInsertClick(Sender: TObject);
+    procedure buttonPatientCardModifyBackClick(Sender: TObject);
+    procedure treeNodeRootCardAfterSelectNode(Sender: TObject;
+      ANode: TAdvTreeViewVirtualNode);
+    procedure treeNodeCardNodeDblClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
+    procedure gridCardDblClickCell(Sender: TObject; ARow, ACol: Integer);
+    procedure FormShow(Sender: TObject);
   private
     { Private declarations }
     insertParentId, insertContent, insertInitExam, insertEnable: TStrings;
@@ -168,130 +194,15 @@ implementation
 uses
   uDataModule, uModifyNode;
 
-const
-  GRID_EMPLOYEE_ID = 4;
-  GRID_EMPLOYEE_NAME = 1;
-  GRID_EMPLOYEE_ENABLE = 2;
-  GRID_EMPLOYEE_CREATED = 3;
-
-  GRID_PATIENT_ID = 14;
-  GRID_PATIENT_FNAME = 1;
-  GRID_PATIENT_NAME = 2;
-  GRID_PATIENT_LNAME = 3;
-  GRID_PATIENT_BIRTHDAY = 4;
-  GRID_PATIENT_SEX = 5;
-  GRID_PATIENT_PROFF = 6;
-  GRID_PATIENT_ADDRESS1 = 7;
-  GRID_PATIENT_ADDRESS2 = 8;
-  GRID_PATIENT_ADDRESS3 = 9;
-  GRID_PATIENT_PHONE1 = 10;
-  GRID_PATIENT_PHONE2 = 11;
-  GRID_PATIENT_NOTES = 12;
-  GRID_PATIENT_CREATED = 13;
-
-  GRID_CARD_ID = 5;
-  GRID_CARD_PATIENT_ID = 6;
-  GRID_CARD_NAME = 2;
-  GRID_CARD_NOTES = 4;
-  GRID_CARD_EMPLOYEE_NAME = 3;
-  GRID_CARD_CREATED = 1;
-
-  TREE_NODE_ROOT_ID = 1;
-  TREE_NODE_ROOT_CONTENT = 0;
-
-  TREE_NODE_ID = 3;
-  TREE_NODE_PARENT_ID = 4;
-  TREE_NODE_CONTENT = 0;
-  TREE_NODE_INIT_EXAM = 1;
-  TREE_NODE_ENABLE = 2;
-
-  TREE_NODE_NEW_PARENT_ID = 5;
-  TREE_NODE_MODIFY_ID = 6;
-
-  TEXT_ACTIVE = 'Активный';
-  TEXT_INACTIVE = 'Не активный';
-  TEXT_YES = 'Да';
-  TEXT_NOT = 'Нет';
-  TEXT_MEN = 'Муж.';
-  TEXT_WOMEN = 'Жен.';
-  TEXT_NAME_TEMPLATE = 'Текст шаблона';
-  TEXT_NAME_EMPLOYEE = 'Введите Фамилия И.О.';
-
-  JSON_ERROR = 'error';
-  JSON_RESPONSE = 'response';
-
-  JSON_ID = 'id';
-  JSON_PARENT_ID = 'parent_id';
-  JSON_CONTENT = 'content';
-  JSON_IS_INIT_EXAM = 'is_init_exam';
-  JSON_IS_ENABLE = 'is_enable';
-
-  JSON_NAME = 'name';
-  JSON_CREATED = 'created';
-
-  JSON_FNAME = 'fname';
-  JSON_LNAME = 'lname';
-  JSON_BIRTHDAY = 'birthday';
-  JSON_SEX = 'sex';
-  JSON_PROFF = 'proff';
-  JSON_ADDRESS1 = 'address1';
-  JSON_ADDRESS2 = 'address2';
-  JSON_ADDRESS3 = 'address3';
-  JSON_PHONE1 = 'phone1';
-  JSON_PHONE2 = 'phone2';
-  JSON_NOTES = 'notes';
-
-  JSON_PATIENT_ID = 'patient_id';
-  JSON_EMNAME = 'em_name';
-
-  MSG_TEXT_TEMPLATE_EMPTY = 'Поле "' + TEXT_NAME_TEMPLATE + '" не должно быть пустым!';
-  MSG_TEXT_EMPLOYEE_EMPTY = 'Поле "' + TEXT_NAME_EMPLOYEE + '" не должно быть пустым!';
-  MSG_TEXT_SAVE_NODE_WARNING =
-    'Для добавления шаблона к только что созданным узлам, необходимо сохранить предыдущие изменения';
-
 function TfmMain.aaaIsEmptyText(s, msg: String): Boolean;
 begin
   if Length(Trim(s)) = 0 then
   begin
-    MessageDlg(MSG_TEXT_TEMPLATE_EMPTY, mtWarning, [mbOK], 0);
+    MessageDlg(msg, mtWarning, [mbOK], 0);
     Result := true;
   end
   else
     Result := false;
-end;
-
-{ рекрусивная процедура "рисует" treeview из json по коду id }
-procedure TfmMain.aaaBuildTree(id: String; joItems: TJSONArray; PNode: TAdvTreeViewNode;
-  TTree: TAdvTreeView);
-var
-  joItem: TJSONObject;
-  CNode: TAdvTreeViewNode;
-  i: Integer;
-begin
-  for i := 0 to joItems.Count - 1 do
-  begin
-    joItem := joItems.Items[i] as TJSONObject;
-    if joItem.GetValue(JSON_PARENT_ID).ToString = id then
-    begin
-      CNode := TTree.AddNode(PNode);
-      CNode.Text[TREE_NODE_CONTENT] := joItem.GetValue(JSON_CONTENT).Value;
-
-      if joItem.GetValue(JSON_IS_INIT_EXAM).Value = '1' then
-        CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_YES
-      else
-        CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
-
-      if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
-        CNode.Text[TREE_NODE_ENABLE] := TEXT_ACTIVE
-      else
-        CNode.Text[TREE_NODE_ENABLE] := TEXT_INACTIVE;
-
-      CNode.Text[TREE_NODE_ID] := joItem.GetValue(JSON_ID).Value;
-      CNode.Text[TREE_NODE_PARENT_ID] := joItem.GetValue(JSON_PARENT_ID).Value;
-      aaaBuildTree(joItem.GetValue(JSON_ID).ToString, joItems, CNode, TTree);
-    end;
-  end;
-
 end;
 
 // рекрусивная процедура проходится по нашим шабланом и ищем измененные и добавленные
@@ -400,95 +311,6 @@ begin
   memoNotes.Lines.Clear;
 end;
 
-// обновляем/перечитываем таблицу пациентов
-procedure TfmMain.aaaPatientRefresh;
-var
-  OriginalJSONObject: TJSONObject;
-  joItems: TJSONArray;
-  joItem: TJSONObject;
-
-  JSONString: String;
-  error: Boolean;
-  i: Integer;
-begin
-  gridPatient.BeginUpdate;
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'patient';
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
-
-  error := OriginalJSONObject.GetValue('error') is TJSONTrue;
-  if error = false then
-  begin
-    joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
-
-    if joItems.Count <> 0 then
-    begin
-      gridPatient.RowCount := joItems.Count + 1;
-
-      for i := 0 to joItems.Count - 1 do
-      begin
-        joItem := joItems.Items[i] as TJSONObject;
-
-        gridPatient.Cells[GRID_PATIENT_FNAME, i + 1] := joItem.GetValue(JSON_FNAME).Value;
-
-        gridPatient.Cells[GRID_PATIENT_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
-
-        gridPatient.Cells[GRID_PATIENT_LNAME, i + 1] := joItem.GetValue(JSON_LNAME).Value;
-
-        gridPatient.Cells[GRID_PATIENT_BIRTHDAY, i + 1] :=
-          joItem.GetValue(JSON_BIRTHDAY).Value;
-
-        if joItem.GetValue(JSON_SEX).Value = '1' then
-          gridPatient.Cells[GRID_PATIENT_SEX, i + 1] := TEXT_MEN
-        else
-          gridPatient.Cells[GRID_PATIENT_SEX, i + 1] := TEXT_WOMEN;
-
-        gridPatient.Cells[GRID_PATIENT_PROFF, i + 1] := joItem.GetValue(JSON_PROFF).Value;
-
-        gridPatient.Cells[GRID_PATIENT_ADDRESS1, i + 1] :=
-          joItem.GetValue(JSON_ADDRESS1).Value;
-
-        gridPatient.Cells[GRID_PATIENT_ADDRESS2, i + 1] :=
-          joItem.GetValue(JSON_ADDRESS2).Value;
-
-        gridPatient.Cells[GRID_PATIENT_ADDRESS3, i + 1] :=
-          joItem.GetValue(JSON_ADDRESS3).Value;
-
-        gridPatient.Cells[GRID_PATIENT_PHONE1, i + 1] :=
-          joItem.GetValue(JSON_PHONE1).Value;
-
-        gridPatient.Cells[GRID_PATIENT_PHONE2, i + 1] :=
-          joItem.GetValue(JSON_PHONE2).Value;
-
-        gridPatient.Cells[GRID_PATIENT_NOTES, i + 1] := joItem.GetValue(JSON_NOTES).Value;
-
-        gridPatient.Cells[GRID_PATIENT_CREATED, i + 1] :=
-          joItem.GetValue(JSON_CREATED).Value;
-        // скрытый столбей, содержжит id
-        gridPatient.Cells[GRID_PATIENT_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
-      end;
-    end;
-  end;
-  FreeAndNil(OriginalJSONObject);
-  // gridPatient.AutoSize:=true;
-  gridPatient.AutoSizeColumns(false);
-  if gridPatient.ColWidths[GRID_PATIENT_FNAME] < 100 then
-    gridPatient.ColWidths[GRID_PATIENT_FNAME] := 100;
-  if gridPatient.ColWidths[GRID_PATIENT_NAME] < 100 then
-    gridPatient.ColWidths[GRID_PATIENT_NAME] := 100;
-  if gridPatient.ColWidths[GRID_PATIENT_LNAME] < 100 then
-    gridPatient.ColWidths[GRID_PATIENT_LNAME] := 100;
-  // gridPatient.ColWidths[GRID_PATIENT_NOTES]:=200;
-  gridPatient.ColWidths[GRID_PATIENT_NOTES] := 150;
-  gridPatient.EndUpdate;
-end;
-
 procedure TfmMain.aaaPatientFilter(FilterStr: String; FCol: SmallInt);
 begin
   gridPatient.FilterActive := false;
@@ -509,79 +331,76 @@ begin
 end;
 
 procedure TfmMain.aaaCardRefresh(patient_id: String);
-var
-  OriginalJSONObject: TJSONObject;
-  joItems: TJSONArray;
-  joItem: TJSONObject;
-
-  JSONString: String;
-  error: Boolean;
-  i: Integer;
 
 begin
-  gridCards.BeginUpdate;
-  with dmDataModule do
+
+end;
+
+{ рисуем кнопки "зубы" }
+procedure TfmMain.aaaToothButtonsSet;
+{ name - номер кнопки, добавляеть к имени и в GroupIndex
+  top, left - координаты, сверху, слева относительно контейнера
+  blGlyph - константа расположения изображения, blGlyphTop = 1, blGlyphBottom =3 }
+  procedure SetToothButton(Name, Top, Left: Integer; blGlyph: TButtonLayout);
+  var
+    btnTooth: TAdvGlassButton;
   begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'card/' + patient_id;
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+    btnTooth := TAdvGlassButton.Create(plTooths);
+    btnTooth.Parent := plTooths;
+    btnTooth.Top := Top;
+    btnTooth.Left := Left;
+    btnTooth.Height := 20;
+    btnTooth.Width := 20;
+    btnTooth.ShowCaption := false;
+    btnTooth.ShowHint := true;
+    btnTooth.Hint := IntToStr(Name);
+    btnTooth.Name := 'btnTooth' + IntToStr(Name);
+    btnTooth.Caption := IntToStr(Name);
+
+    btnTooth.GroupIndex := Name;
+    // btnTooth.Tag:=0; // это мы не указываем явно при создании т.к. 0 значение по умолчанию
+    btnTooth.AllowAllUp := true;
+
+    btnTooth.BackColor := clSilver;
+    btnTooth.CornerRadius := 2;
+    btnTooth.ForeColor := clWhite;
+    btnTooth.GlowColor := clWhite;
+    btnTooth.InnerBorderColor := clNone;
+    btnTooth.OuterBorderColor := clGray;
+    btnTooth.Layout := blGlyph;
+    btnTooth.ShineColor := clWhite;
+    btnTooth.Picture := btnToothTmp.Picture;
+    btnTooth.PictureDown := btnToothTmp.PictureDown;
   end;
 
-  error := OriginalJSONObject.GetValue('error') is TJSONTrue;
-  if error = false then
+var
+  i, Left, blGlyph: Integer;
+begin
+  Left := 8;
+  for i := 18 downto 11 do
   begin
-    // если карточек у пациента нет то JSONString = 'null'
-    // если там хоть что то есть то вернет ''
-    JSONString := OriginalJSONObject.GetValue('response').Value;
-    if JSONString = '' then
-    begin
-      joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
-
-      if joItems.Count <> 0 then
-      begin
-        gridCards.RowCount := joItems.Count + 1;
-
-        for i := 0 to joItems.Count - 1 do
-        begin
-          joItem := joItems.Items[i] as TJSONObject;
-
-          gridCards.Cells[GRID_CARD_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
-
-          gridCards.Cells[GRID_CARD_NOTES, i + 1] := joItem.GetValue(JSON_NOTES).Value;
-
-          gridCards.Cells[GRID_CARD_EMPLOYEE_NAME, i + 1] :=
-            joItem.GetValue(JSON_EMNAME).Value;
-
-          gridCards.Cells[GRID_CARD_CREATED, i + 1] :=
-            joItem.GetValue(JSON_CREATED).Value;
-
-          gridCards.Cells[GRID_CARD_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
-
-          gridCards.Cells[GRID_CARD_PATIENT_ID, i + 1] :=
-            joItem.GetValue(JSON_PATIENT_ID).Value;
-        end;
-
-      end;
-
-    end;
-
+    SetToothButton(i, 6, Left, blGlyphBottom);
+    Left := Left + 24;
+  end;
+  Left := Left + 8;
+  for i := 21 to 28 do
+  begin
+    SetToothButton(i, 6, Left, blGlyphBottom);
+    Left := Left + 24;
   end;
 
-  FreeAndNil(OriginalJSONObject);
-  // gridPatient.AutoSize:=true;
-  gridCards.AutoSizeColumns(false);
-  if gridCards.ColWidths[GRID_CARD_NAME] < 150 then
-    gridCards.ColWidths[GRID_CARD_NAME] := 150;
-  if gridCards.ColWidths[GRID_CARD_NOTES] < 150 then
-    gridCards.ColWidths[GRID_CARD_NOTES] := 150;
-  if gridCards.ColWidths[GRID_CARD_EMPLOYEE_NAME] < 150 then
-    gridCards.ColWidths[GRID_CARD_EMPLOYEE_NAME] := 150;
-  // gridPatient.ColWidths[GRID_PATIENT_NOTES]:=200;
-  gridCards.ColWidths[GRID_CARD_CREATED] := 130;
-  gridCards.EndUpdate;
+  Left := 8;
+  for i := 48 downto 41 do
+  begin
+    SetToothButton(i, 30, Left, blGlyphTop);
+    Left := Left + 24;
+  end;
+  Left := Left + 8;
+  for i := 31 to 38 do
+  begin
+    SetToothButton(i, 30, Left, blGlyphTop);
+    Left := Left + 24;
+  end;
 end;
 
 procedure TfmMain.buttonPatientModifyClick(Sender: TObject);
@@ -777,7 +596,7 @@ begin
       buttonPatientInsert.Down := false;
       buttonPatientModify.Down := false;
       plPatientInsert.Visible := false;
-      aaaPatientRefresh;
+      patientRefresh(gridPatient);
     end
     else
       ShowMessage('Ошибка при сохранении: ' + OriginalJSONObject.GetValue
@@ -796,15 +615,44 @@ begin
   aaaPatientFieldClear;
 end;
 
-procedure TfmMain.buttonCardsClick(Sender: TObject);
+procedure TfmMain.buttonPatientCardListBackClick(Sender: TObject);
+begin
+  patientRefresh(gridPatient);
+  plSettings.Visible := false;
+  plPatient.Visible := true;
+  plPatientCardList.Visible := false;
+  plPatientCardModify.Visible := false;
+end;
+
+procedure TfmMain.buttonPatientCardListClick(Sender: TObject);
 var
   s: String;
 begin
   plPatient.Visible := false;
   plSettings.Visible := false;
-  plCardList.Visible := true;
+  plPatientCardList.Visible := true;
   s := gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]];
-  aaaCardRefresh(s);
+
+  patientCard(gridCardList, s);
+
+  // gridPatient.AutoSize:=true;
+  { gridCards.AutoSizeColumns(false);
+    if gridCards.ColWidths[GRID_CARD_NAME] < 150 then
+    gridCards.ColWidths[GRID_CARD_NAME] := 150;
+    if gridCards.ColWidths[GRID_CARD_NOTES] < 150 then
+    gridCards.ColWidths[GRID_CARD_NOTES] := 150;
+    if gridCards.ColWidths[GRID_CARD_EMPLOYEE_NAME] < 150 then
+    gridCards.ColWidths[GRID_CARD_EMPLOYEE_NAME] := 150;
+    // gridPatient.ColWidths[GRID_PATIENT_NOTES]:=200;
+    gridCards.ColWidths[GRID_CARD_CREATED] := 130; }
+end;
+
+procedure TfmMain.buttonPatientCardModifyBackClick(Sender: TObject);
+begin
+  plSettings.Visible := false;
+  plPatient.Visible := false;
+  plPatientCardList.Visible := true;
+  plPatientCardModify.Visible := false;
 end;
 
 procedure TfmMain.buttonEmployeeInsertClick(Sender: TObject);
@@ -821,16 +669,38 @@ begin
   end;
 end;
 
+procedure TfmMain.buttonEmployeeModifyClick(Sender: TObject);
+begin
+  with fmModifyData do
+  begin
+    aaaModifyStyle(2);
+    fmModifyData.editField.Text := gridEmployee.Cells[GRID_EMPLOYEE_NAME,
+      gridEmployee.SelectedRow[0]];
+    if gridEmployee.Cells[GRID_EMPLOYEE_ENABLE, gridEmployee.SelectedRow[0]] = TEXT_ACTIVE
+    then
+      fmModifyData.checkEnable.Checked := true
+    else
+      fmModifyData.checkEnable.Checked := false;
+    // форма закрылась кнопочкой ОК
+    if fmModifyData.ShowModal = mrOk then
+      if aaaIsEmptyText(editField.Text, MSG_TEXT_TEMPLATE_EMPTY) = false then
+      begin
+
+      end;
+  end;
+end;
+
 procedure TfmMain.buttonNodeCancelClick(Sender: TObject);
 begin
-  treeNodeRootAfterSelectNode(Sender, treeNodeRoot.SelectedVirtualNode);
+  // treeNodeRootSettingAfterSelectNode(Sender, treeNodeRootSetting.SelectedVirtualNode);
+  treeNodeContent(treeNodeSetting, treeNodeRootSetting.SelectedVirtualNode.Node, true);
 end;
 
 procedure TfmMain.buttonNodeInsertClick(Sender: TObject);
 var
   CNode: TAdvTreeViewNode;
 begin
-  if treeNodeRoot.SelectedNodeCount > 0 then
+  if treeNodeRootSetting.SelectedNodeCount > 0 then
     if Assigned(glModifyNode) then
       if glModifyNode.Node.Text[TREE_NODE_ID] <> '' then
       begin
@@ -840,7 +710,7 @@ begin
           begin
             if aaaIsEmptyText(editField.Text, MSG_TEXT_EMPLOYEE_EMPTY) = false then
             begin
-              CNode := treeNode.AddNode(glModifyNode.Node);
+              CNode := treeNodeSetting.AddNode(glModifyNode.Node);
               CNode.Text[TREE_NODE_CONTENT] := editField.Text;
 
               if checkInitExam.Checked then
@@ -856,7 +726,7 @@ begin
               CNode.Text[TREE_NODE_ID] := '';
               CNode.Text[TREE_NODE_NEW_PARENT_ID] := glModifyNode.Node.Text[TREE_NODE_ID];
 
-              treeNode.ExpandAll;
+              treeNodeSetting.ExpandAll;
             end;
           end;
       end
@@ -865,7 +735,7 @@ begin
         MessageDlg(MSG_TEXT_SAVE_NODE_WARNING, mtWarning, [mbOK], 0);
       end
     else
-      MessageDlg('Выберите узел для добавление шаблонов', mtInformation, [mbOK], 0);
+      MessageDlg(MSG_TEXT_SELECT_ROOT_TEMPLATE, mtInformation, [mbOK], 0);
 end;
 
 // TODO успешно/ошибка при сохранении записи
@@ -874,7 +744,6 @@ var
   OriginalJSONObject: TJSONObject;
   JSONString: String;
 
-  error: Boolean;
   i: Integer;
 begin
   buttonNodeSave.Enabled := false;
@@ -898,8 +767,8 @@ begin
   updateInitExam.Clear;
   updateEnable.Clear;
 
-  if treeNode.Nodes.Items[0] <> nil then
-    aaaSearchModifyNode(treeNode.Nodes.Items[0]);
+  if treeNodeSetting.Nodes.Items[0] <> nil then
+    aaaSearchModifyNode(treeNodeSetting.Nodes.Items[0]);
 
   with dmDataModule do
   begin
@@ -968,25 +837,40 @@ begin
   plPatientInsert.Visible := false;
 end;
 
+procedure TfmMain.buttonPatientCardInsertClick(Sender: TObject);
+begin
+  plSettings.Visible := false;
+  plPatient.Visible := false;
+  plPatientCardList.Visible := false;
+  plPatientCardModify.Visible := true;
+
+  treeNodeRootContent(treeNodeRootCard);
+  // treeNodeContent(treeNodeCard);
+  gridCard.RowCount := 2;
+end;
+
 procedure TfmMain.buttonPatientClick(Sender: TObject);
 begin
-  plPatient.Visible := true;
   plSettings.Visible := false;
-  plCardList.Visible := false;
+  plPatient.Visible := true;
+  plPatientCardList.Visible := false;
+  plPatientCardModify.Visible := false;
+
   plPatientInsert.Visible := false;
-  aaaPatientRefresh
+  patientRefresh(gridPatient);
 end;
 
 procedure TfmMain.buttonSettingsClick(Sender: TObject);
 begin
-  plPatient.Visible := false;
   plSettings.Visible := true;
-  plCardList.Visible := false;
+  plPatient.Visible := false;
+  plPatientCardList.Visible := false;
+  plPatientCardModify.Visible := false;
 end;
 
 procedure TfmMain.editFNameChange(Sender: TObject);
 begin
-  aaaPatientFilter(editFName.Text + '*', GRID_PATIENT_FNAME);
+  // aaaPatientFilter(editFName.Text + '*', GRID_PATIENT_FNAME);
 end;
 
 procedure TfmMain.editFNameRightButtonClick(Sender: TObject);
@@ -995,7 +879,17 @@ begin
   editFName.SetFocus;
 end;
 
+procedure TfmMain.FormShow(Sender: TObject);
+begin
+  aaaToothButtonsSet;
+end;
+
 // TODO Доделать процедуру редактирования сотрудника
+procedure TfmMain.gridCardDblClickCell(Sender: TObject; ARow, ACol: Integer);
+begin
+  gridCard.RemoveRows(ARow, 1);
+end;
+
 procedure TfmMain.gridEmployeeDblClickCell(Sender: TObject; ARow, ACol: Integer);
 begin
   // aaaModifyStyle(2);
@@ -1014,7 +908,7 @@ begin
   begin
     if MessageDlg('Удалить шаблон "' + glModifyNode.Node.Text[TREE_NODE_CONTENT] + '"?',
       mtConfirmation, mbOKCancel, 0) = mrOk then
-      treeNode.RemoveNode(glModifyNode.Node);
+      treeNodeSetting.RemoveNode(glModifyNode.Node);
   end
   else
     MessageDlg('Нельзя удалить действующие шаблоны', mtInformation, [mbOK], 0);
@@ -1026,16 +920,16 @@ var
   ClickedOK: Boolean;
   CNode: TAdvTreeViewNode;
 begin
-  if treeNodeRoot.SelectedNodeCount > 0 then
+  if treeNodeRootSetting.SelectedNodeCount > 0 then
   begin
     NewString := 'Введите текст шаблона';
     ClickedOK := InputQuery('Добавление нового узла', 'Текст шаблона', NewString);
     if ClickedOK = true then { NewString contains new input string. }
     begin
-      CNode := treeNode.AddNode(nil);
+      CNode := treeNodeSetting.AddNode(nil);
       CNode.Text[TREE_NODE_CONTENT] := NewString;
       CNode.Text[TREE_NODE_ID] := '';
-      CNode.Text[TREE_NODE_NEW_PARENT_ID] := treeNodeRoot.SelectedNode.Text
+      CNode.Text[TREE_NODE_NEW_PARENT_ID] := treeNodeRootSetting.SelectedNode.Text
         [TREE_NODE_ROOT_ID];
       // CNode.CollapsedIconNames[0, false] := 'FOLDER';
       // CNode.ExpandedIconNames[0, false]  := 'FOLDER_OPEN';
@@ -1049,7 +943,7 @@ var
   ClickedOK: Boolean;
   CNode: TAdvTreeViewNode;
 begin
-  if treeNodeRoot.SelectedNodeCount > 0 then
+  if treeNodeRootSetting.SelectedNodeCount > 0 then
     if glModifyNode.Node.Text[TREE_NODE_ID] <> '' then
     begin
       NewString := 'Введите текст шаблона';
@@ -1057,14 +951,14 @@ begin
       if ClickedOK = true then { NewString contains new input string. }
         if aaaIsEmptyText(NewString, MSG_TEXT_TEMPLATE_EMPTY) = false then
         begin
-          CNode := treeNode.AddNode(glModifyNode.Node);
+          CNode := treeNodeSetting.AddNode(glModifyNode.Node);
           CNode.Text[TREE_NODE_CONTENT] := NewString;
           CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
           CNode.Text[TREE_NODE_ENABLE] := TEXT_ACTIVE;
           CNode.Text[TREE_NODE_ID] := '';
           CNode.Text[TREE_NODE_NEW_PARENT_ID] := glModifyNode.Node.Text[TREE_NODE_ID];
 
-          treeNode.ExpandAll;
+          treeNodeSetting.ExpandAll;
           // CNode.CollapsedIconNames[0, false] := 'FOLDER';
           // CNode.ExpandedIconNames[0, false] := 'FOLDER_OPEN';
         end;
@@ -1099,6 +993,8 @@ begin
   fmt.ShortDateFormat := 'yyyy-MM-dd';
   fmt.DateSeparator := '-';
   fmMain.Caption := DateToStr(dateBirthday.Date, fmt);
+
+  aaaToothButtonsSet;
 end;
 
 procedure TfmMain.tabEmployeeShow(Sender: TObject);
@@ -1106,9 +1002,9 @@ var
   OriginalJSONObject: TJSONObject;
   joItems: TJSONArray;
   joItem: TJSONObject;
-  // jValue:TJSONValue;
+
   JSONString: String;
-  error: Boolean;
+  status: String;
   i: Integer;
 begin
   with dmDataModule do
@@ -1120,12 +1016,12 @@ begin
     JSONString := RESTResponse1.JSONValue.ToString;
     OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
   end;
+  gridEmployee.Clear;
 
-  error := OriginalJSONObject.GetValue('error') is TJSONTrue;
-  if error = false then
+  status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
+  if status = STATUS_OK then
   begin
-    joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
-
+    joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
     gridEmployee.RowCount := joItems.Count + 1;
     for i := 0 to joItems.Count - 1 do
     begin
@@ -1144,6 +1040,12 @@ begin
       gridEmployee.Cells[GRID_EMPLOYEE_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
     end;
   end;
+
+  if status = STATUS_NO_CONTENT then
+  begin
+    gridEmployee.RowCount := 2;
+  end;
+
   FreeAndNil(OriginalJSONObject);
 
   // gridEmployee.SaveToJSON();
@@ -1158,56 +1060,18 @@ begin
 end;
 
 procedure TfmMain.tabTreeShow(Sender: TObject);
-var
-  OriginalJSONObject: TJSONObject;
-  joItems: TJSONArray;
-  joItem: TJSONObject;
-  // jValue:TJSONValue;
-  JSONString: String;
-  error: Boolean;
-  i: Integer;
-
-  Node: TAdvTreeViewNode;
 begin
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'tree';
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    // jValue:=RESTResponse1.JSONValue;
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
-
-  error := OriginalJSONObject.GetValue('error') is TJSONTrue;
-  if error = false then
-  begin
-    treeNodeRoot.ClearNodes;
-    treeNodeRoot.BeginUpdate;
-
-    joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
-    for i := 0 to joItems.Count - 1 do
-    begin
-      joItem := joItems.Items[i] as TJSONObject;
-      Node := treeNodeRoot.Nodes.Add;
-      Node.Text[TREE_NODE_ROOT_CONTENT] := joItem.GetValue(JSON_CONTENT).Value;
-      Node.Text[TREE_NODE_ROOT_ID] := joItem.GetValue(JSON_ID).Value;
-    end;
-    treeNodeRoot.EndUpdate;
-  end;
-  FreeAndNil(OriginalJSONObject);
-
-  treeNode.ColumnsAppearance.StretchColumn := 0;
+  treeNodeRootContent(treeNodeRootSetting);
+  treeNodeSetting.ColumnsAppearance.StretchColumn := 0;
 end;
 
-procedure TfmMain.treeNodeMouseUp(Sender: TObject; Button: TMouseButton;
+procedure TfmMain.treeNodeSettingMouseUp(Sender: TObject; Button: TMouseButton;
   Shift: TShiftState; X, Y: Integer);
 begin
   if Button = mbRight then
   begin
     glModifyNode := nil;
-    glModifyNode := treeNode.XYToNode(X, Y);
+    glModifyNode := treeNodeSetting.XYToNode(X, Y);
     if Assigned(glModifyNode) = true then
     begin
       menuInsertSubnode.Enabled := true;
@@ -1225,12 +1089,14 @@ begin
   end;
 end;
 
-procedure TfmMain.treeNodeNodeClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
+procedure TfmMain.treeNodeSettingNodeClick(Sender: TObject;
+  ANode: TAdvTreeViewVirtualNode);
 begin
   glModifyNode := ANode;
 end;
 
-procedure TfmMain.treeNodeNodeDblClick(Sender: TObject; ANode: TAdvTreeViewVirtualNode);
+procedure TfmMain.treeNodeSettingNodeDblClick(Sender: TObject;
+  ANode: TAdvTreeViewVirtualNode);
 begin
   with fmModifyData do
   begin
@@ -1268,46 +1134,54 @@ begin
   end;
 end;
 
-procedure TfmMain.treeNodeRootAfterSelectNode(Sender: TObject;
+procedure TfmMain.treeNodeCardNodeDblClick(Sender: TObject;
   ANode: TAdvTreeViewVirtualNode);
 var
-  OriginalJSONObject: TJSONObject;
-  joItems: TJSONArray;
-  joItem: TJSONObject;
-  JSONString: String;
-  error: Boolean;
-
-  i: Integer;
+  sTooths: String;
+  i: SmallInt;
 begin
-  treeNode.ColumnsAppearance.StretchColumn := 0;
-  with dmDataModule do
+  if ANode.GetChildCount = 0 then
   begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'tree/' + ANode.Node.Text[TREE_NODE_ROOT_ID];
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    // jValue:=RESTResponse1.JSONValue;
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
+    sTooths := '';
+    { перебираем все кнопки, если нашли "вдавленную" помечаем её картинкой из
+      кнопки шаблона и "выдавливаем") т.е. показываем пользователю что она была
+      ранее выбрана, сохраняя при этом коды зубов разделенных :, вносим данные в
+      поле Tag +1 (изначально Tag = 0), это нужно для того что бы отследить сколь раз выбиралась это
+      кнопка }
+    for i := 0 to plTooths.ComponentCount - 1 do
+      if plTooths.Components[i] is TAdvGlassButton then
+        if (plTooths.Components[i] as TAdvGlassButton).Down = true then
+        begin
+          sTooths := sTooths + IntToStr((plTooths.Components[i] as TAdvGlassButton)
+            .GroupIndex) + ':';
+          (plTooths.Components[i] as TAdvGlassButton).Picture :=
+            btnToothTmp.PictureDisabled;
+          (plTooths.Components[i] as TAdvGlassButton).Down := false;
+          (plTooths.Components[i] as TAdvGlassButton).Tag :=
+            (plTooths.Components[i] as TAdvGlassButton).Tag + 1;
+        end;
 
-  error := OriginalJSONObject.GetValue('error') is TJSONTrue;
-  if error = false then
-  begin
-    treeNode.ClearNodes;
-    treeNode.BeginUpdate;
+    if gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] <> '' then
+      gridCard.RowCount := gridCard.RowCount + 1;
 
-    joItems := OriginalJSONObject.GetValue('response') as TJSONArray;
-    for i := 0 to joItems.Count - 1 do
-    begin
-      joItem := joItems.Items[i] as TJSONObject;
-      if joItem.GetValue(JSON_ID).ToString = ANode.Node.Text[TREE_NODE_ROOT_ID] then
-        aaaBuildTree(joItem.GetValue(JSON_ID).ToString, joItems, nil, treeNode);
-    end;
-    treeNode.ExpandAll;
-    treeNode.EndUpdate;
+    gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
+      treeNodeRootCard.SelectedNode.Text[TREE_NODE_ROOT_CONTENT];
+    gridCard.Cells[GRID_CARD_TOOTH, gridCard.RowCount - 1] := sTooths;
+    gridCard.Cells[GRID_CARD_CONTENT, gridCard.RowCount - 1] :=
+      ANode.Node.Text[TREE_NODE_ROOT_CONTENT];
   end;
-  FreeAndNil(OriginalJSONObject);
+end;
+
+procedure TfmMain.treeNodeRootCardAfterSelectNode(Sender: TObject;
+  ANode: TAdvTreeViewVirtualNode);
+begin
+  treeNodeContent(treeNodeCard, ANode.Node);
+end;
+
+procedure TfmMain.treeNodeRootSettingAfterSelectNode(Sender: TObject;
+  ANode: TAdvTreeViewVirtualNode);
+begin
+  treeNodeContent(treeNodeSetting, ANode.Node, true);
 end;
 
 end.

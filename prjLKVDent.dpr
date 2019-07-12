@@ -4,7 +4,8 @@ uses
   Vcl.Forms,
   uMain in 'uMain.pas' {fmMain},
   uDataModule in 'uDataModule.pas' {dmDataModule: TDataModule},
-  uModifyNode in 'uModifyNode.pas' {fmModifyData};
+  uModifyNode in 'uModifyNode.pas' {fmModifyData},
+  uContent in 'uContent.pas';
 
 {$R *.res}
 
