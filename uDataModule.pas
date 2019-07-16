@@ -13,6 +13,7 @@ type
     RESTRequest1: TRESTRequest;
     RESTResponse1: TRESTResponse;
     imagesButton: TImageList;
+    procedure RESTRequest1AfterExecute(Sender: TCustomRESTRequest);
   private
     { Private declarations }
   public
@@ -29,5 +30,10 @@ implementation
 uses uMain;
 
 {$R *.dfm}
+
+procedure TdmDataModule.RESTRequest1AfterExecute(Sender: TCustomRESTRequest);
+begin
+  fmMain.logger(RESTRequest1.Resource,'ok');
+end;
 
 end.

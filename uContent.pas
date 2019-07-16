@@ -5,6 +5,7 @@ interface
 uses
   System.SysUtils,
   System.JSON,
+  Vcl.StdCtrls,
   REST.Types,
   AdvTreeView,
   AdvTreeViewData,
@@ -13,6 +14,10 @@ uses
 const
   STATUS_OK = '200';
   STATUS_NO_CONTENT = '204';
+
+  LOG_GET = 'GET';
+  LOG_POST = 'POST';
+  LOG_PUT = 'PUT';
 
   GRID_EMPLOYEE_ID = 4;
   GRID_EMPLOYEE_NAME = 1;
@@ -34,16 +39,17 @@ const
   GRID_PATIENT_NOTES = 12;
   GRID_PATIENT_CREATED = 13;
 
-  GRID_CARD_LIST_ID = 5;
-  GRID_CARD_LIST_PATIENT_ID = 6;
+  GRID_CARD_LIST_ID = 6;
+  GRID_CARD_LIST_PATIENT_ID = 7;
   GRID_CARD_LIST_NAME = 2;
-  GRID_CARD_LIST_NOTES = 4;
+  GRID_CARD_LIST_NOTES = 5;
   GRID_CARD_LIST_EMPLOYEE_NAME = 3;
   GRID_CARD_LIST_CREATED = 1;
+  GRID_CARD_LIST_RECORD = 4;
 
-  GRID_CARD_ID = 4;
-  GRID_CARD_CARD_ID = 5;
-  GRID_CARD_TREE_ID = 6;
+  GRID_CARD_ID = 6;
+  GRID_CARD_CARD_ID = 4;
+  GRID_CARD_TREE_ID = 5;
   GRID_CARD_ROOTNODE = 1;
   GRID_CARD_TOOTH = 2;
   GRID_CARD_CONTENT = 3;
@@ -95,21 +101,37 @@ const
 
   JSON_PATIENT_ID = 'patient_id';
   JSON_EMNAME = 'em_name';
+  JSON_RECORD = 'record';
+
+  JSON_EMPLOYEE_ID = 'employee_id';
+
+  JSON_CARD_ID = 'card_id';
+  JSON_TREE_ID = 'tree_id';
+  JSON_TOOTH = 'tooth';
 
   MSG_TEXT_TEMPLATE_EMPTY = 'Поле "' + TEXT_NAME_TEMPLATE + '" не должно быть пустым!';
   MSG_TEXT_EMPLOYEE_EMPTY = 'Поле "' + TEXT_NAME_EMPLOYEE + '" не должно быть пустым!';
   MSG_TEXT_SELECT_ROOT_TEMPLATE = 'Выберите корневой узел для добавление шаблонов';
   MSG_TEXT_SAVE_NODE_WARNING =
     'Для добавления шаблона к только что созданным узлам, необходимо сохранить предыдущие изменения';
+  MSG_TEXT_INSERT_CARD =
+    'Вы действительно хотите создть запись в медкарте пациента и перейти к заполнению';
+
+  // COLUMN_HEADERS_CARD_LIST : array[1..3] of String = ('Дата/время','Фамилия И.О.','Врач');
 
 procedure treeNodeRootContent(treeView: TAdvTreeView; all: Boolean = false);
-//procedure treeNodeBuild(treeView: TAdvTreeView; id: String; joItems: TJSONArray;
-//  ANode: TAdvTreeViewNode; all: Boolean);
+// procedure treeNodeBuild(treeView: TAdvTreeView; id: String; joItems: TJSONArray;
+// ANode: TAdvTreeViewNode; all: Boolean);
 procedure treeNodeContent(treeView: TAdvTreeView; ANode: TAdvTreeViewNode;
   all: Boolean = false);
 
 procedure patientCard(stringGrid: TAdvStringGrid; patient_id: String);
+procedure patientCardInsertSave(stringGrid: TAdvStringGrid; patientId, ANotes: String);
+procedure patientCardView(stringGrid: TAdvStringGrid; cardId: String);
 procedure patientRefresh(stringGrid: TAdvStringGrid);
+procedure employeeList(gridEmployee: TAdvStringGrid; comboEmployee, comboEmployeeId,
+  comboEmployeeOrign: TComboBox);
+procedure employeeModify(style: Boolean; AName: String; is_enable: Boolean; id: String);
 
 implementation
 
@@ -273,7 +295,7 @@ begin
 end;
 
 // -----------------------------------------------------------------------------
-
+{ заполняем таблицу в зависимости от выбранного пациента }
 procedure patientCard(stringGrid: TAdvStringGrid; patient_id: String);
 var
   OriginalJSONObject: TJSONObject;
@@ -286,6 +308,7 @@ var
 begin
   stringGrid.BeginUpdate;
   stringGrid.Clear;
+  // stringGrid.ColumnHeaders.a;
 
   with dmDataModule do
   begin
@@ -294,6 +317,9 @@ begin
     RESTRequest1.Params.Clear;
     RESTRequest1.Execute;
     JSONString := RESTResponse1.JSONValue.ToString;
+
+    fmMain.logger(LOG_GET, JSONString);
+
     OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
   end;
 
@@ -308,11 +334,15 @@ begin
       for i := 0 to joItems.Count - 1 do
       begin
         joItem := joItems.Items[i] as TJSONObject;
+        stringGrid.Cells[GRID_CARD_LIST_CREATED, i + 1] :=
+          joItem.GetValue(JSON_CREATED).Value;
         stringGrid.Cells[GRID_CARD_LIST_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
-        stringGrid.Cells[GRID_CARD_LIST_NOTES, i + 1] := joItem.GetValue(JSON_NOTES).Value;
         stringGrid.Cells[GRID_CARD_LIST_EMPLOYEE_NAME, i + 1] :=
           joItem.GetValue(JSON_EMNAME).Value;
-        stringGrid.Cells[GRID_CARD_LIST_CREATED, i + 1] := joItem.GetValue(JSON_CREATED).Value;
+        stringGrid.Cells[GRID_CARD_LIST_RECORD, i + 1] :=
+          joItem.GetValue(JSON_RECORD).Value;
+        stringGrid.Cells[GRID_CARD_LIST_NOTES, i + 1] :=
+          joItem.GetValue(JSON_NOTES).Value;
         stringGrid.Cells[GRID_CARD_LIST_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
         stringGrid.Cells[GRID_CARD_LIST_PATIENT_ID, i + 1] :=
           joItem.GetValue(JSON_PATIENT_ID).Value;
@@ -321,11 +351,159 @@ begin
   end;
   if status = STATUS_NO_CONTENT then
   begin
-    stringGrid.RowCount:=2;
+    stringGrid.RowCount := 2;
   end;
 
   stringGrid.EndUpdate;
   FreeAndNil(OriginalJSONObject);
+end;
+
+procedure patientCardInsertSave(stringGrid: TAdvStringGrid; patientId, ANotes: String);
+var
+  OriginalJSONObject: TJSONObject;
+  // joItems: TJSONString;
+  joItem: TJSONObject;
+
+  JSONString: String;
+  status: String;
+  cardId: String;
+  i: Integer;
+begin
+  with dmDataModule do
+  begin
+    RESTRequest1.Method := rmPOST;
+    RESTRequest1.Resource := 'card';
+    RESTRequest1.Params.Clear;
+
+    RESTRequest1.Params.AddItem(JSON_PATIENT_ID, UTF8EncodeToShortString(patientId),
+      pkGETorPOST, [poDoNotEncode]);
+    // для обеспечения целосности данных присваеваем 1 запись "(нет)"
+    RESTRequest1.Params.AddItem(JSON_EMPLOYEE_ID, UTF8EncodeToShortString('1'),
+      pkGETorPOST, [poDoNotEncode]);
+    RESTRequest1.Params.AddItem(JSON_NOTES, UTF8EncodeToShortString(ANotes), pkGETorPOST,
+      [poDoNotEncode]);
+
+    RESTRequest1.Execute;
+    JSONString := RESTResponse1.JSONValue.ToString;
+    fmMain.logger(LOG_POST + ' card', JSONString);
+    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+
+    status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
+    if status = STATUS_OK then
+    begin
+      joItem := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONObject;
+      cardId := joItem.GetValue(JSON_ID).Value;
+
+      // joItem := joItems.GetValue(JSON_ID) as TJSONString;
+
+      for i := 1 to stringGrid.RowCount - 1 do
+      begin
+        RESTRequest1.Method := rmPOST;
+        RESTRequest1.Resource := 'cardtree';
+        RESTRequest1.Params.Clear;
+
+        RESTRequest1.Params.AddItem(JSON_CARD_ID, UTF8EncodeToShortString(cardId),
+          pkGETorPOST, [poDoNotEncode]);
+
+        RESTRequest1.Params.AddItem(JSON_TREE_ID,
+          UTF8EncodeToShortString(stringGrid.Cells[GRID_CARD_TREE_ID, i]), pkGETorPOST,
+          [poDoNotEncode]);
+
+        RESTRequest1.Params.AddItem(JSON_TOOTH,
+          UTF8EncodeToShortString(stringGrid.Cells[GRID_CARD_TOOTH, i]), pkGETorPOST,
+          [poDoNotEncode]);
+
+        RESTRequest1.Execute;
+
+        JSONString := RESTResponse1.JSONValue.ToString;
+        fmMain.logger(LOG_POST + ' cardtree', JSONString);
+      end;
+
+    end;
+    FreeAndNil(OriginalJSONObject);
+    // FreeAndNil(joItem);
+  end;
+
+end;
+
+function treeContent(treeId: String): String;
+var
+  OriginalJSONObject: TJSONObject;
+  joItems: TJSONArray;
+  joItem: TJSONObject;
+
+  JSONString: String;
+  status: String;
+  i: Integer;
+begin
+  with dmDataModule do
+  begin
+    RESTRequest1.Method := rmGET;
+    RESTRequest1.Resource := 'tree/' + treeId;
+    RESTRequest1.Params.Clear;
+    RESTRequest1.Execute;
+    JSONString := RESTResponse1.JSONValue.ToString;
+  end;
+
+  OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+  status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
+  if status = STATUS_OK then
+  begin
+    joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
+    joItem := joItems.Items[i] as TJSONObject;
+    Result:=
+  end;
+end;
+
+procedure patientCardView(stringGrid: TAdvStringGrid; cardId: String);
+var
+  OriginalJSONObject: TJSONObject;
+  joItems: TJSONArray;
+  joItem: TJSONObject;
+
+  JSONString: String;
+  status: String;
+  i: Integer;
+begin
+  with dmDataModule do
+  begin
+
+    RESTRequest1.Method := rmGET;
+    RESTRequest1.Resource := 'cardtree/' + cardId;
+    RESTRequest1.Params.Clear;
+
+    RESTRequest1.Execute;
+    JSONString := RESTResponse1.JSONValue.ToString;
+
+    fmMain.logger(LOG_GET + 'cardtree/' + cardId, JSONString);
+
+    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+    status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
+    if status = STATUS_OK then
+    begin
+      joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
+      stringGrid.RowCount := joItems.Count + 1;
+
+      for i := 0 to joItems.Count - 1 do
+      begin
+
+        { gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
+          treeNodeRootCard.SelectedNode.text[TREE_NODE_ROOT_CONTENT];
+
+          gridCard.Cells[GRID_CARD_TOOTH, gridCard.RowCount - 1] := sTooths;
+
+          gridCard.Cells[GRID_CARD_CONTENT, gridCard.RowCount - 1] :=
+          ANode.Node.text[TREE_NODE_ROOT_CONTENT];
+
+          gridCard.Cells[GRID_CARD_TREE_ID, gridCard.RowCount - 1] :=
+          ANode.Node.text[TREE_NODE_ID]; }
+      end;
+
+    end;
+    FreeAndNil(OriginalJSONObject);
+    // FreeAndNil(joItem);
+  end;
+
 end;
 
 procedure patientRefresh(stringGrid: TAdvStringGrid);
@@ -389,6 +567,134 @@ begin
   end;
   FreeAndNil(OriginalJSONObject);
   stringGrid.EndUpdate;
+end;
+
+procedure employeeList(gridEmployee: TAdvStringGrid; comboEmployee, comboEmployeeId,
+  comboEmployeeOrign: TComboBox);
+var
+  OriginalJSONObject: TJSONObject;
+  joItems: TJSONArray;
+  joItem: TJSONObject;
+
+  JSONString: String;
+  status: String;
+  i: Integer;
+begin
+  with dmDataModule do
+  begin
+    RESTRequest1.Method := rmGET;
+    RESTRequest1.Resource := 'employee';
+    RESTRequest1.Params.Clear;
+    RESTRequest1.Execute;
+    JSONString := RESTResponse1.JSONValue.ToString;
+    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+  end;
+  gridEmployee.Clear;
+  comboEmployee.Clear;
+  comboEmployeeOrign.Clear;
+  comboEmployeeId.Clear;
+
+  status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
+  if status = STATUS_OK then
+  begin
+    joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
+    gridEmployee.RowCount := joItems.Count + 1;
+
+    for i := 0 to joItems.Count - 1 do
+    begin
+
+      joItem := joItems.Items[i] as TJSONObject;
+
+      gridEmployee.Cells[GRID_EMPLOYEE_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
+
+      if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
+        gridEmployee.Cells[GRID_EMPLOYEE_ENABLE, i + 1] := TEXT_ACTIVE
+      else
+        gridEmployee.Cells[GRID_EMPLOYEE_ENABLE, i + 1] := TEXT_INACTIVE;
+
+      gridEmployee.Cells[GRID_EMPLOYEE_CREATED, i + 1] :=
+        joItem.GetValue(JSON_CREATED).Value;
+      // скрытый столбей, содержжит id
+      gridEmployee.Cells[GRID_EMPLOYEE_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
+
+      if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
+      begin
+        comboEmployee.Items.Add(joItem.GetValue(JSON_NAME).Value);
+        comboEmployeeOrign.Items.Add(joItem.GetValue(JSON_NAME).Value);
+        comboEmployeeId.Items.Add(joItem.GetValue(JSON_ID).Value);
+      end;
+
+      // if joItem.GetValue(JSON_ID).Value = '1' then
+      // comboEmployee.Items.Add(joItem.GetValue(JSON_NAME).Value);
+    end;
+    comboEmployee.ItemIndex := 0;
+    comboEmployeeOrign.ItemIndex := 0;
+    comboEmployeeId.ItemIndex := 0;
+  end;
+
+  if status = STATUS_NO_CONTENT then
+  begin
+    gridEmployee.RowCount := 2;
+  end;
+
+  FreeAndNil(OriginalJSONObject);
+end;
+
+// style
+// true добавить запись
+// false изменить запись
+procedure employeeModify(style: Boolean; AName: String; is_enable: Boolean; id: String);
+var
+  OriginalJSONObject: TJSONObject;
+  joItems: TJSONArray;
+  joItem: TJSONObject;
+
+  JSONString: String;
+  status: String;
+  i: Integer;
+begin
+  if style = true then
+    with dmDataModule do
+    begin
+      RESTRequest1.Method := rmPOST;
+      RESTRequest1.Resource := 'employee';
+      RESTRequest1.Params.Clear;
+
+      RESTRequest1.Params.AddItem(JSON_NAME, UTF8EncodeToShortString(Trim(AName)),
+        pkGETorPOST, [poDoNotEncode]);
+
+      if is_enable = true then
+        RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString('1'),
+          pkGETorPOST, [poDoNotEncode])
+      else
+        RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString('0'),
+          pkGETorPOST, [poDoNotEncode]);
+
+      RESTRequest1.Execute;
+      JSONString := RESTResponse1.JSONValue.ToString;
+      // OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+    end
+  else
+    with dmDataModule do
+    begin
+      RESTRequest1.Method := rmPUT;
+      RESTRequest1.Resource := 'employee/' + id;
+      RESTRequest1.Params.Clear;
+
+      RESTRequest1.Params.AddItem(JSON_NAME, UTF8EncodeToShortString(Trim(AName)),
+        pkGETorPOST, [poDoNotEncode]);
+
+      if is_enable = true then
+        RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString('1'),
+          pkGETorPOST, [poDoNotEncode])
+      else
+        RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString('0'),
+          pkGETorPOST, [poDoNotEncode]);
+
+      RESTRequest1.Execute;
+      JSONString := RESTResponse1.JSONValue.ToString;
+      // OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+    end
 end;
 
 end.
