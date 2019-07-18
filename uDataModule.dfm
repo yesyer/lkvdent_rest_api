@@ -1,7 +1,7 @@
 object dmDataModule: TdmDataModule
   OldCreateOrder = False
-  Height = 373
-  Width = 515
+  Height = 359
+  Width = 799
   object RESTClient1: TRESTClient
     Accept = 'application/json, text/plain; q=0.9, text/html;q=0.8,'
     AcceptCharset = 'UTF-8, *;q=0.8'
@@ -31,7 +31,7 @@ object dmDataModule: TdmDataModule
     Left = 38
     Top = 152
     Bitmap = {
-      494C010101000800200010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008002C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -169,5 +169,266 @@ object dmDataModule: TdmDataModule
       E007000000000000E187000000000000F3CF000000000000FFFF000000000000
       FFFF000000000000FFFF00000000000000000000000000000000000000000000
       000000000000}
+  end
+  object frxPatientPerenesennyeISoputstvuyushchieZabolevaniya: TfrxUserDataSet
+    UserName = 'frxPatientPerenesennyeISoputstvuyushchieZabolevaniya'
+    Left = 264
+    Top = 152
+  end
+  object frxPatientInfo: TfrxUserDataSet
+    UserName = 'frxPatientInfo'
+    Fields.Strings = (
+      'fullname'
+      'birthday'
+      'sex'
+      'address'
+      'proff')
+    OnGetValue = frxPatientInfoGetValue
+    Left = 264
+    Top = 8
+  end
+  object frxPatientCard: TfrxReport
+    Version = '5.1.5'
+    DotMatrixReport = False
+    IniFile = '\Software\Fast Reports'
+    PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
+    PreviewOptions.Zoom = 1.000000000000000000
+    PrintOptions.Printer = 'Default'
+    PrintOptions.PrintOnSheet = 0
+    ReportOptions.CreateDate = 43664.428399351900000000
+    ReportOptions.LastChange = 43664.428399351900000000
+    ScriptLanguage = 'PascalScript'
+    ScriptText.Strings = (
+      'begin'
+      ''
+      'end.')
+    Left = 152
+    Top = 8
+    Datasets = <
+      item
+        DataSet = frxPatientPerenesennyeISoputstvuyushchieZabolevaniya
+        DataSetName = 'frxPatientPerenesennyeISoputstvuyushchieZabolevaniya'
+      end
+      item
+        DataSet = frxPatientInfo
+        DataSetName = 'frxPatientInfo'
+      end>
+    Variables = <>
+    Style = <
+      item
+        Name = 'TimesNewRoman-10'
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -13
+        Font.Name = 'Times New Roman'
+        Font.Style = []
+      end>
+    object Data: TfrxDataPage
+      Height = 1000.000000000000000000
+      Width = 1000.000000000000000000
+    end
+    object Page1: TfrxReportPage
+      PaperWidth = 210.000000000000000000
+      PaperHeight = 297.000000000000000000
+      PaperSize = 9
+      LeftMargin = 10.000000000000000000
+      RightMargin = 10.000000000000000000
+      TopMargin = 10.000000000000000000
+      BottomMargin = 10.000000000000000000
+      object MasterData1: TfrxMasterData
+        FillType = ftBrush
+        Height = 94.488250000000000000
+        Top = 272.126160000000000000
+        Width = 718.110700000000000000
+        AllowSplit = True
+        DataSet = frxPatientInfo
+        DataSetName = 'frxPatientInfo'
+        RowCount = 1
+        object Memo1: TfrxMemoView
+          Width = 287.244280000000000000
+          Height = 18.897650000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            #1058#1077#1075#1110', '#1072#1090#1099', '#1241#1082#1077#1089#1110#1085#1110#1187' '#1072#1090#1099'  ('#1060#1072#1084#1080#1083#1080#1103', '#1080#1084#1103', '#1086#1090#1095#1077#1089#1090#1074#1086'):')
+          ParentFont = False
+        end
+        object frxPatientInfofullname: TfrxMemoView
+          Left = 291.023810000000000000
+          Width = 423.307360000000000000
+          Height = 18.897650000000000000
+          DataField = 'fullname'
+          DataSet = frxPatientInfo
+          DataSetName = 'frxPatientInfo'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxPatientInfo."fullname"]')
+          ParentFont = False
+          WordWrap = False
+        end
+        object Memo2: TfrxMemoView
+          Top = 18.897650000000000000
+          Width = 166.299320000000000000
+          Height = 18.897650000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            #1058#1091#1171#1072#1085' '#1082#1199#1085#1110' ('#1044#1072#1090#1072' '#1088#1086#1078#1076#1077#1085#1080#1103'):')
+          ParentFont = False
+        end
+        object frxPatientInfobirthday: TfrxMemoView
+          Left = 166.299320000000000000
+          Top = 18.897650000000000000
+          Width = 147.401670000000000000
+          Height = 18.897650000000000000
+          DataField = 'birthday'
+          DataSet = frxPatientInfo
+          DataSetName = 'frxPatientInfo'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxPatientInfo."birthday"]')
+          ParentFont = False
+          WordWrap = False
+        end
+        object Memo3: TfrxMemoView
+          Top = 37.795300000000000000
+          Width = 166.299320000000000000
+          Height = 18.897650000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            #1046#1099#1085#1099#1089#1099' ('#1077', '#1241') ('#1055#1086#1083' ('#1084', '#1078')):')
+          ParentFont = False
+        end
+        object Memo4: TfrxMemoView
+          Left = 166.299320000000000000
+          Top = 37.795300000000000000
+          Width = 147.401670000000000000
+          Height = 18.897650000000000000
+          DataField = 'sex'
+          DataSet = frxPatientInfo
+          DataSetName = 'frxPatientInfo'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxPatientInfo."sex"]')
+          ParentFont = False
+        end
+        object Memo5: TfrxMemoView
+          Top = 75.590600000000000000
+          Width = 120.944960000000000000
+          Height = 18.897650000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            #1050#1241#1089#1110#1073#1110' ('#1055#1088#1086#1092#1077#1089#1089#1080#1103'):')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+        end
+        object Memo6: TfrxMemoView
+          Left = 124.724490000000000000
+          Top = 56.692950000000000000
+          Width = 597.165740000000000000
+          Height = 18.897650000000000000
+          DataField = 'address'
+          DataSet = frxPatientInfo
+          DataSetName = 'frxPatientInfo'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxPatientInfo."address"]')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+        end
+        object Memo7: TfrxMemoView
+          Top = 56.692950000000000000
+          Width = 120.944960000000000000
+          Height = 18.897650000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            #1052#1077#1082#1077#1085#1078#1072#1081#1099' ('#1072#1076#1088#1077#1089'):')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+        end
+        object Memo8: TfrxMemoView
+          Left = 124.724490000000000000
+          Top = 75.590600000000000000
+          Width = 597.165740000000000000
+          Height = 18.897650000000000000
+          DataField = 'proff'
+          DataSet = frxPatientInfo
+          DataSetName = 'frxPatientInfo'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxPatientInfo."proff"]')
+          ParentFont = False
+        end
+      end
+      object ReportTitle1: TfrxReportTitle
+        FillType = ftBrush
+        Height = 192.756030000000000000
+        Top = 18.897650000000000000
+        Width = 718.110700000000000000
+      end
+      object DetailData1: TfrxDetailData
+        FillType = ftBrush
+        Height = 22.677180000000000000
+        Top = 389.291590000000000000
+        Width = 718.110700000000000000
+        RowCount = 0
+      end
+    end
+  end
+  object frxPatientDiagnosis: TfrxUserDataSet
+    UserName = 'frxPatientDiagnosis'
+    Fields.Strings = (
+      'category'
+      'content')
+    Left = 264
+    Top = 56
+  end
+  object frxPatientRazvitieNastoyashchegoZabolevaniya: TfrxUserDataSet
+    UserName = 'frxPatientRazvitieNastoyashchegoZabolevaniya'
+    Left = 264
+    Top = 200
+  end
+  object frxPatientZhaloby: TfrxUserDataSet
+    UserName = 'frxPatientZhaloby'
+    Left = 264
+    Top = 104
   end
 end

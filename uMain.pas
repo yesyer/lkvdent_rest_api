@@ -111,7 +111,7 @@ type
     Panel1: TPanel;
     buttonPatientCardListBack: TAdvGlassButton;
     buttonPatientCardModify: TAdvGlassButton;
-    AdvGlassButton5: TAdvGlassButton;
+    buttonClose: TAdvGlassButton;
     buttonPatientCardList: TAdvGlassButton;
     buttonPatientCardInsert: TAdvGlassButton;
     plPatientCardModify: TPanel;
@@ -136,6 +136,7 @@ type
     loggerLostBox: TColumnListBox;
     comboEmployeeID: TComboBox;
     comboEmployeeOrign: TComboBox;
+    buttonPrint: TAdvGlassButton;
     procedure tabEmployeeShow(Sender: TObject);
     procedure tabTreeShow(Sender: TObject);
     procedure treeNodeRootSettingAfterSelectNode(Sender: TObject;
@@ -188,6 +189,8 @@ type
     procedure loggerLostBoxClick(Sender: TObject);
     procedure buttonPatientCardModifyClick(Sender: TObject);
     procedure comboEmployeeChange(Sender: TObject);
+    procedure buttonCloseClick(Sender: TObject);
+    procedure buttonPrintClick(Sender: TObject);
   private
     { Private declarations }
     insertParentId, insertContent, insertInitExam, insertEnable: TStrings;
@@ -668,6 +671,15 @@ begin
   FreeAndNil(OriginalJSONObject);
 end;
 
+procedure TfmMain.buttonPrintClick(Sender: TObject);
+begin
+  with dmDataModule do
+  begin
+
+    frxPatientCard.ShowReport;
+  end;
+end;
+
 procedure TfmMain.buttonPatientInsertClick(Sender: TObject);
 begin
   plPatientInsert.Visible := buttonPatientInsert.Down;
@@ -726,13 +738,30 @@ begin
     Exit;
   end;
 
+  treeNodeRootContent(treeNodeRootCard);
+  gridCard.Clear;
+  gridCard.RowCount := 2;
+  employeeList(gridEmployee, comboEmployee, comboEmployeeID, comboEmployeeOrign);
+
+  patientCardView(gridCard, gridCardList.Cells[GRID_CARD_LIST_ID,
+    gridCardList.SelectedRow[0]]);
+
+  plSettings.Visible := false;
+  plPatient.Visible := false;
+  plPatientCardList.Visible := false;
+  plPatientCardModify.Visible := true;
 end;
 
 procedure TfmMain.buttonPatientCardSaveClick(Sender: TObject);
 begin
   { TODO верефикация, сохранить карточку, сохранить изменения карточки }
-  patientCardInsert(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
+  patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
     gridPatient.SelectedRow[0]], '');
+end;
+
+procedure TfmMain.buttonCloseClick(Sender: TObject);
+begin
+  Close;
 end;
 
 procedure TfmMain.buttonEmployeeInsertClick(Sender: TObject);
@@ -932,6 +961,7 @@ begin
   if MessageDlg(MSG_TEXT_INSERT_CARD, mtConfirmation, mbOKCancel, 0) = mrOk then
   begin
     treeNodeRootContent(treeNodeRootCard);
+    gridCard.Clear;
     gridCard.RowCount := 2;
     employeeList(gridEmployee, comboEmployee, comboEmployeeID, comboEmployeeOrign);
 
@@ -1111,7 +1141,7 @@ end;
 procedure TfmMain.tabEmployeeShow(Sender: TObject);
 begin
   // fmMain.Caption:=IntToStr(StrToInt(fmMain.Caption)+1);
-  employeeList(gridEmployee, comboEmployee,comboEmployeeID,comboEmployeeOrign);
+  employeeList(gridEmployee, comboEmployee, comboEmployeeID, comboEmployeeOrign);
 end;
 
 procedure TfmMain.tabTreeShow(Sender: TObject);

@@ -83,6 +83,7 @@ const
   JSON_CONTENT = 'content';
   JSON_IS_INIT_EXAM = 'is_init_exam';
   JSON_IS_ENABLE = 'is_enable';
+  JSON_ROOT = 'root';
 
   JSON_NAME = 'name';
   JSON_CREATED = 'created';
@@ -426,7 +427,7 @@ begin
 
 end;
 
-function treeContent(treeId: String): String;
+function treeContent(treeId: String): TArray<String>;
 var
   OriginalJSONObject: TJSONObject;
   joItems: TJSONArray;
@@ -436,10 +437,11 @@ var
   status: String;
   i: Integer;
 begin
+  SetLength(result,2);
   with dmDataModule do
   begin
     RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'tree/' + treeId;
+    RESTRequest1.Resource := 'tree-one/' + treeId;
     RESTRequest1.Params.Clear;
     RESTRequest1.Execute;
     JSONString := RESTResponse1.JSONValue.ToString;
@@ -449,10 +451,12 @@ begin
   status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
   if status = STATUS_OK then
   begin
-    joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
-    joItem := joItems.Items[i] as TJSONObject;
-    Result:=
+    joItem := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONObject;
+    //joItem := joItems.Items[0] as TJSONObject;
+    result[0] := joItem.GetValue(JSON_CONTENT).Value;
+    result[1]:= joItem.GetValue(JSON_ROOT).Value;
   end;
+  FreeAndNil(OriginalJSONObject);
 end;
 
 procedure patientCardView(stringGrid: TAdvStringGrid; cardId: String);
@@ -465,6 +469,9 @@ var
   status: String;
   i: Integer;
 begin
+  stringGrid.Clear;
+  stringGrid.RowCount:= 2;
+
   with dmDataModule do
   begin
 
@@ -481,12 +488,17 @@ begin
     status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
     if status = STATUS_OK then
     begin
+
       joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
       stringGrid.RowCount := joItems.Count + 1;
 
       for i := 0 to joItems.Count - 1 do
       begin
+        joItem := joItems.Items[i] as TJSONObject;
 
+        stringGrid.Cells[GRID_CARD_ROOTNODE, i + 1] := treeContent(joItem.GetValue(JSON_TREE_ID).Value)[1];
+        stringGrid.Cells[GRID_CARD_CONTENT, i + 1] := treeContent(joItem.GetValue(JSON_TREE_ID).Value)[0];
+        stringGrid.Cells[GRID_CARD_TOOTH, i + 1] := joItem.GetValue(JSON_TOOTH).Value;
         { gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
           treeNodeRootCard.SelectedNode.text[TREE_NODE_ROOT_CONTENT];
 
