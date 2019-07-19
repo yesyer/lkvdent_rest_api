@@ -1,5 +1,31 @@
-unit uMain;
+{ константы в таблице tb_tree, особенно важно для id 6-10
 
+
+
+
+
+
+
+
+
+  id, parent_id, content, is_init_exam, is_enable
+
+  1 	NULL 	Жалобы 	                                  0 	1
+
+  2 	NULL 	Объективные данные 	                      0 	1
+  3 	NULL 	Диагноз 	                                0 	1
+  4 	NULL 	Лечение 	                                0 	1
+  5 	NULL 	Рекомендации 	                            0 	1
+  6 	NULL 	Предварительный осмотр 	                  1 	1
+  7 	6 	  Диагноз 	                                0 	1
+  8 	6 	  Жалобы 	                                  0 	1
+  9 	6 	  Перенесенные и сопутствующие заболевания 	0 	1
+  10 	6 	  Развитие настоящего заболевания 	        0 	1
+  11 	NULL 	Резерв 1 	                                0 	0
+  12 	NULL 	Резерв 2 	                                0 	0 }
+
+unit uMain;
+
 interface
 
 uses
@@ -699,15 +725,16 @@ begin
 end;
 
 procedure TfmMain.buttonPatientCardListClick(Sender: TObject);
-var
-  s: String;
+// var
+// s: String;
 begin
   plPatient.Visible := false;
   plSettings.Visible := false;
   plPatientCardList.Visible := true;
-  s := gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]];
-  logger('patient_id', s);
-  patientCard(gridCardList, s);
+  // s := gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]];
+  logger('patient_id', gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]]);
+  patientCard(gridCardList, gridPatient.Cells[GRID_PATIENT_ID,
+    gridPatient.SelectedRow[0]]);
 
   // gridPatient.AutoSize:=true;
   { gridCards.AutoSizeColumns(false);
@@ -730,21 +757,38 @@ begin
 end;
 
 procedure TfmMain.buttonPatientCardModifyClick(Sender: TObject);
+var
+  i: Integer;
 begin
   { TODO верефикация, сохранить карточку, сохранить изменения карточки }
   if gridCardList.Cells[GRID_CARD_LIST_CREATED, gridCardList.SelectedRow[0]] = '' then
   begin
-
     Exit;
   end;
 
-  treeNodeRootContent(treeNodeRootCard);
+  if gridCardList.SelectedRow[0] = 1 then
+    treeNodeRootContent(treeNodeRootCard, '1')
+  else
+    treeNodeRootContent(treeNodeRootCard, '0');
+
   gridCard.Clear;
   gridCard.RowCount := 2;
   employeeList(gridEmployee, comboEmployee, comboEmployeeID, comboEmployeeOrign);
 
-  patientCardView(gridCard, gridCardList.Cells[GRID_CARD_LIST_ID,
-    gridCardList.SelectedRow[0]]);
+  if gridCardList.SelectedRow[0] = 1 then
+    patientCardView(gridCard, gridCardList.Cells[GRID_CARD_LIST_ID,
+      gridCardList.SelectedRow[0]], '1')
+  else
+    patientCardView(gridCard, gridCardList.Cells[GRID_CARD_LIST_ID,
+      gridCardList.SelectedRow[0]], '0');
+
+  for i := 0 to comboEmployee.Items.Count - 1 do
+    if comboEmployee.Items[i] = gridCardList.Cells[GRID_CARD_LIST_EMPLOYEE_NAME,
+      gridCardList.SelectedRow[0]] then
+    begin
+      comboEmployee.ItemIndex := i;
+      comboEmployeeChange(Sender);
+    end;
 
   plSettings.Visible := false;
   plPatient.Visible := false;
@@ -755,8 +799,12 @@ end;
 procedure TfmMain.buttonPatientCardSaveClick(Sender: TObject);
 begin
   { TODO верефикация, сохранить карточку, сохранить изменения карточки }
-  patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
-    gridPatient.SelectedRow[0]], '');
+  if gridCardList.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]] = '' then
+    patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
+      gridPatient.SelectedRow[0]], comboEmployeeID.text, '1')
+  else
+    patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
+      gridPatient.SelectedRow[0]], comboEmployeeID.text, '0');
 end;
 
 procedure TfmMain.buttonCloseClick(Sender: TObject);
@@ -958,29 +1006,29 @@ end;
 
 procedure TfmMain.buttonPatientCardInsertClick(Sender: TObject);
 begin
-  if MessageDlg(MSG_TEXT_INSERT_CARD, mtConfirmation, mbOKCancel, 0) = mrOk then
-  begin
-    treeNodeRootContent(treeNodeRootCard);
-    gridCard.Clear;
-    gridCard.RowCount := 2;
-    employeeList(gridEmployee, comboEmployee, comboEmployeeID, comboEmployeeOrign);
+  // if MessageDlg(MSG_TEXT_INSERT_CARD, mtConfirmation, mbOKCancel, 0) = mrOk then
+  // begin
+  if (gridCardList.Cells[GRID_CARD_LIST_INITEXAM, gridCardList.SelectedRow[0]] = '') then
+    treeNodeRootContent(treeNodeRootCard, '1')
+  else
+    treeNodeRootContent(treeNodeRootCard, '0');
 
-    // DateTimePicker1.Date:=StrToDateTime(gridCardList.Cells[GRID_CARD_LIST_CREATED,gridCardList.SelectedRow[0]]);
-    dateCard.DateTime := now;
-    labelName.Caption := gridCardList.Cells[GRID_CARD_LIST_NAME,
-      gridCardList.SelectedRow[0]];
+  gridCard.Clear;
+  gridCard.RowCount := 2;
+  employeeList(gridEmployee, comboEmployee, comboEmployeeID, comboEmployeeOrign);
 
-    plSettings.Visible := false;
-    plPatient.Visible := false;
-    plPatientCardList.Visible := false;
-    plPatientCardModify.Visible := true;
-  end;
+  // DateTimePicker1.Date:=StrToDateTime(gridCardList.Cells[GRID_CARD_LIST_CREATED,gridCardList.SelectedRow[0]]);
+  dateCard.DateTime := now;
+  labelName.Caption := gridCardList.Cells[GRID_CARD_LIST_NAME,
+    gridCardList.SelectedRow[0]];
+  comboEmployeeChange(Sender);
 
-
-
-
+  plSettings.Visible := false;
+  plPatient.Visible := false;
+  plPatientCardList.Visible := false;
+  plPatientCardModify.Visible := true;
+  // end;
   // treeNodeContent(treeNodeCard);
-
 end;
 
 procedure TfmMain.buttonPatientClick(Sender: TObject);
@@ -1249,8 +1297,12 @@ begin
     if gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] <> '' then
       gridCard.RowCount := gridCard.RowCount + 1;
 
-    gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
-      treeNodeRootCard.SelectedNode.text[TREE_NODE_ROOT_CONTENT];
+    if treeNodeRootCard.Nodes.Count = 1 then
+      gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
+        treeNodeRootCard.SelectedNode.
+    else
+      gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
+        treeNodeRootCard.SelectedNode.text[TREE_NODE_ROOT_CONTENT];
 
     gridCard.Cells[GRID_CARD_TOOTH, gridCard.RowCount - 1] := sTooths;
 

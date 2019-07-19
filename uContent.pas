@@ -39,13 +39,18 @@ const
   GRID_PATIENT_NOTES = 12;
   GRID_PATIENT_CREATED = 13;
 
-  GRID_CARD_LIST_ID = 6;
-  GRID_CARD_LIST_PATIENT_ID = 7;
-  GRID_CARD_LIST_NAME = 2;
-  GRID_CARD_LIST_NOTES = 5;
-  GRID_CARD_LIST_EMPLOYEE_NAME = 3;
+  GRID_CARD_LIST_ID = 7;
+  GRID_CARD_LIST_PATIENT_ID = 8;
+  GRID_CARD_LIST_NAME = 3;
+  GRID_CARD_LIST_NOTES = 6;
+  GRID_CARD_LIST_EMPLOYEE_NAME = 4;
   GRID_CARD_LIST_CREATED = 1;
-  GRID_CARD_LIST_RECORD = 4;
+  GRID_CARD_LIST_UPDATED = 2;
+  GRID_CARD_LIST_RECORD = 5;
+  GRID_CARD_LIST_INITEXAM = 9;
+  GRID_CARD_LIST_COLUMN: array [0 .. 6] of String = ('', 'Дата создания',
+    'Дата изменения', 'Фамилия И.О.', 'Врач', 'Кол-во записей', 'Примичание');
+  GRID_CARD_LIST_COLUMN_COUNT = 6;
 
   GRID_CARD_ID = 6;
   GRID_CARD_CARD_ID = 4;
@@ -84,9 +89,11 @@ const
   JSON_IS_INIT_EXAM = 'is_init_exam';
   JSON_IS_ENABLE = 'is_enable';
   JSON_ROOT = 'root';
+  JSON_SUBROOT = 'subroot';
 
   JSON_NAME = 'name';
   JSON_CREATED = 'created';
+  JSON_UPDATED = 'updated';
 
   JSON_FNAME = 'fname';
   JSON_LNAME = 'lname';
@@ -120,19 +127,20 @@ const
 
   // COLUMN_HEADERS_CARD_LIST : array[1..3] of String = ('Дата/время','Фамилия И.О.','Врач');
 
-procedure treeNodeRootContent(treeView: TAdvTreeView; all: Boolean = false);
+procedure treeNodeRootContent(treeView: TAdvTreeView; initExam: String = '0');
 // procedure treeNodeBuild(treeView: TAdvTreeView; id: String; joItems: TJSONArray;
 // ANode: TAdvTreeViewNode; all: Boolean);
 procedure treeNodeContent(treeView: TAdvTreeView; ANode: TAdvTreeViewNode;
   all: Boolean = false);
 
-procedure patientCard(stringGrid: TAdvStringGrid; patient_id: String);
-procedure patientCardInsertSave(stringGrid: TAdvStringGrid; patientId, ANotes: String);
-procedure patientCardView(stringGrid: TAdvStringGrid; cardId: String);
+procedure patientCard(stringGrid: TAdvStringGrid; patientId: String);
+procedure patientCardInsertSave(stringGrid: TAdvStringGrid;
+  patientId, employee_id, init_exam: String);
+procedure patientCardView(stringGrid: TAdvStringGrid; cardId, initExam: String);
 procedure patientRefresh(stringGrid: TAdvStringGrid);
 procedure employeeList(gridEmployee: TAdvStringGrid; comboEmployee, comboEmployeeId,
   comboEmployeeOrign: TComboBox);
-procedure employeeModify(style: Boolean; AName: String; is_enable: Boolean; id: String);
+procedure employeeModify(style: Boolean; AName: String; isEnable: Boolean; id: String);
 
 implementation
 
@@ -142,7 +150,7 @@ uses uDataModule, uMain;
   treeView - TAdvTreeView для которого заполняется контент
   all = false - заполнять только автивные элементы
   all = true - заполнять все элементы }
-procedure treeNodeRootContent(treeView: TAdvTreeView; all: Boolean = false);
+procedure treeNodeRootContent(treeView: TAdvTreeView; initExam: String = '0');
 var
   OriginalJSONObject: TJSONObject;
   joItems: TJSONArray;
@@ -176,19 +184,20 @@ begin
     begin
       joItem := joItems.Items[i] as TJSONObject;
 
-      if (joItem.GetValue(JSON_IS_ENABLE).Value = '0') and (all = true) then
+      if (joItem.GetValue(JSON_IS_ENABLE).Value = '1') and
+        (joItem.GetValue(JSON_IS_INIT_EXAM).Value = initExam) then
       begin
         Node := treeView.Nodes.Add;
         Node.Text[TREE_NODE_ROOT_CONTENT] := joItem.GetValue(JSON_CONTENT).Value;
         Node.Text[TREE_NODE_ROOT_ID] := joItem.GetValue(JSON_ID).Value;
       end;
 
-      if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
-      begin
+      { if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
+        begin
         Node := treeView.Nodes.Add;
         Node.Text[TREE_NODE_ROOT_CONTENT] := joItem.GetValue(JSON_CONTENT).Value;
         Node.Text[TREE_NODE_ROOT_ID] := joItem.GetValue(JSON_ID).Value;
-      end;
+        end; }
     end;
     treeView.EndUpdate;
   end;
@@ -297,7 +306,7 @@ end;
 
 // -----------------------------------------------------------------------------
 { заполняем таблицу в зависимости от выбранного пациента }
-procedure patientCard(stringGrid: TAdvStringGrid; patient_id: String);
+procedure patientCard(stringGrid: TAdvStringGrid; patientId: String);
 var
   OriginalJSONObject: TJSONObject;
   joItems: TJSONArray;
@@ -309,12 +318,15 @@ var
 begin
   stringGrid.BeginUpdate;
   stringGrid.Clear;
-  // stringGrid.ColumnHeaders.a;
+  stringGrid.ColumnHeaders.Clear;
+  for i := 0 to GRID_CARD_LIST_COLUMN_COUNT do
+    stringGrid.ColumnHeaders.Add(GRID_CARD_LIST_COLUMN[i]);
+  // stringGrid.ColumnHeader.cos.a;
 
   with dmDataModule do
   begin
     RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'card/' + patient_id;
+    RESTRequest1.Resource := 'card/' + patientId;
     RESTRequest1.Params.Clear;
     RESTRequest1.Execute;
     JSONString := RESTResponse1.JSONValue.ToString;
@@ -335,18 +347,30 @@ begin
       for i := 0 to joItems.Count - 1 do
       begin
         joItem := joItems.Items[i] as TJSONObject;
+
         stringGrid.Cells[GRID_CARD_LIST_CREATED, i + 1] :=
           joItem.GetValue(JSON_CREATED).Value;
+
+        stringGrid.Cells[GRID_CARD_LIST_UPDATED, i + 1] :=
+          joItem.GetValue(JSON_UPDATED).Value;
+
         stringGrid.Cells[GRID_CARD_LIST_NAME, i + 1] := joItem.GetValue(JSON_NAME).Value;
         stringGrid.Cells[GRID_CARD_LIST_EMPLOYEE_NAME, i + 1] :=
           joItem.GetValue(JSON_EMNAME).Value;
+
         stringGrid.Cells[GRID_CARD_LIST_RECORD, i + 1] :=
           joItem.GetValue(JSON_RECORD).Value;
+
         stringGrid.Cells[GRID_CARD_LIST_NOTES, i + 1] :=
           joItem.GetValue(JSON_NOTES).Value;
+
         stringGrid.Cells[GRID_CARD_LIST_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
+
         stringGrid.Cells[GRID_CARD_LIST_PATIENT_ID, i + 1] :=
           joItem.GetValue(JSON_PATIENT_ID).Value;
+
+        stringGrid.Cells[GRID_CARD_LIST_INITEXAM, i + 1] :=
+          joItem.GetValue(JSON_IS_INIT_EXAM).Value;
       end;
     end;
   end;
@@ -359,7 +383,8 @@ begin
   FreeAndNil(OriginalJSONObject);
 end;
 
-procedure patientCardInsertSave(stringGrid: TAdvStringGrid; patientId, ANotes: String);
+procedure patientCardInsertSave(stringGrid: TAdvStringGrid;
+  patientId, employee_id, init_exam: String);
 var
   OriginalJSONObject: TJSONObject;
   // joItems: TJSONString;
@@ -379,10 +404,10 @@ begin
     RESTRequest1.Params.AddItem(JSON_PATIENT_ID, UTF8EncodeToShortString(patientId),
       pkGETorPOST, [poDoNotEncode]);
     // для обеспечения целосности данных присваеваем 1 запись "(нет)"
-    RESTRequest1.Params.AddItem(JSON_EMPLOYEE_ID, UTF8EncodeToShortString('1'),
+    RESTRequest1.Params.AddItem(JSON_EMPLOYEE_ID, UTF8EncodeToShortString(employee_id),
       pkGETorPOST, [poDoNotEncode]);
-    RESTRequest1.Params.AddItem(JSON_NOTES, UTF8EncodeToShortString(ANotes), pkGETorPOST,
-      [poDoNotEncode]);
+    RESTRequest1.Params.AddItem(JSON_IS_INIT_EXAM, UTF8EncodeToShortString(init_exam),
+      pkGETorPOST, [poDoNotEncode]);
 
     RESTRequest1.Execute;
     JSONString := RESTResponse1.JSONValue.ToString;
@@ -427,7 +452,7 @@ begin
 
 end;
 
-function treeContent(treeId: String): TArray<String>;
+function treeContent(treeId, initExam: String): TArray<String>;
 var
   OriginalJSONObject: TJSONObject;
   joItems: TJSONArray;
@@ -437,7 +462,7 @@ var
   status: String;
   i: Integer;
 begin
-  SetLength(result,2);
+  SetLength(result, 2);
   with dmDataModule do
   begin
     RESTRequest1.Method := rmGET;
@@ -452,14 +477,18 @@ begin
   if status = STATUS_OK then
   begin
     joItem := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONObject;
-    //joItem := joItems.Items[0] as TJSONObject;
+    // joItem := joItems.Items[0] as TJSONObject;
     result[0] := joItem.GetValue(JSON_CONTENT).Value;
-    result[1]:= joItem.GetValue(JSON_ROOT).Value;
+
+    if initExam = '1' then
+      result[1] := joItem.GetValue(JSON_SUBROOT).Value
+    else
+      result[1] := joItem.GetValue(JSON_ROOT).Value
   end;
   FreeAndNil(OriginalJSONObject);
 end;
 
-procedure patientCardView(stringGrid: TAdvStringGrid; cardId: String);
+procedure patientCardView(stringGrid: TAdvStringGrid; cardId, initExam: String);
 var
   OriginalJSONObject: TJSONObject;
   joItems: TJSONArray;
@@ -470,7 +499,7 @@ var
   i: Integer;
 begin
   stringGrid.Clear;
-  stringGrid.RowCount:= 2;
+  stringGrid.RowCount := 2;
 
   with dmDataModule do
   begin
@@ -496,8 +525,10 @@ begin
       begin
         joItem := joItems.Items[i] as TJSONObject;
 
-        stringGrid.Cells[GRID_CARD_ROOTNODE, i + 1] := treeContent(joItem.GetValue(JSON_TREE_ID).Value)[1];
-        stringGrid.Cells[GRID_CARD_CONTENT, i + 1] := treeContent(joItem.GetValue(JSON_TREE_ID).Value)[0];
+        stringGrid.Cells[GRID_CARD_ROOTNODE, i + 1] :=
+          treeContent(joItem.GetValue(JSON_TREE_ID).Value, initExam)[1];
+        stringGrid.Cells[GRID_CARD_CONTENT, i + 1] :=
+          treeContent(joItem.GetValue(JSON_TREE_ID).Value, initExam)[0];
         stringGrid.Cells[GRID_CARD_TOOTH, i + 1] := joItem.GetValue(JSON_TOOTH).Value;
         { gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
           treeNodeRootCard.SelectedNode.text[TREE_NODE_ROOT_CONTENT];
@@ -655,7 +686,7 @@ end;
 // style
 // true добавить запись
 // false изменить запись
-procedure employeeModify(style: Boolean; AName: String; is_enable: Boolean; id: String);
+procedure employeeModify(style: Boolean; AName: String; isEnable: Boolean; id: String);
 var
   OriginalJSONObject: TJSONObject;
   joItems: TJSONArray;
@@ -675,7 +706,7 @@ begin
       RESTRequest1.Params.AddItem(JSON_NAME, UTF8EncodeToShortString(Trim(AName)),
         pkGETorPOST, [poDoNotEncode]);
 
-      if is_enable = true then
+      if isEnable = true then
         RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString('1'),
           pkGETorPOST, [poDoNotEncode])
       else
@@ -696,7 +727,7 @@ begin
       RESTRequest1.Params.AddItem(JSON_NAME, UTF8EncodeToShortString(Trim(AName)),
         pkGETorPOST, [poDoNotEncode]);
 
-      if is_enable = true then
+      if isEnable = true then
         RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString('1'),
           pkGETorPOST, [poDoNotEncode])
       else
