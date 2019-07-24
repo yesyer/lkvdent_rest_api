@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<TfrxReport Version="5.1.5" DotMatrixReport="False" IniFile="\Software\Fast Reports" PreviewOptions.Buttons="4095" PreviewOptions.Zoom="1" PrintOptions.Printer="Default" PrintOptions.PrintOnSheet="0" ReportOptions.CreateDate="43664,4283993519" ReportOptions.Description.Text="" ReportOptions.LastChange="43669,7255154398" ScriptLanguage="PascalScript" ScriptText.Text="begin&#13;&#10;&#13;&#10;end.">
+  <Datasets>
+    <item DataSet="frxPatientDiagnosis" DataSetName="frxPatientDiagnosis"/>
+    <item DataSet="frxPatientInfo" DataSetName="frxPatientInfo"/>
+    <item DataSet="frxPatientPISZ" DataSetName="frxPatientPISZ"/>
+    <item DataSet="frxPatientZhaloby" DataSetName="frxPatientZhaloby"/>
+    <item DataSet="frxUserDataSet1" DataSetName="frxUserDataSet1"/>
+  </Datasets>
+  <Styles>
+    <item Name="TimesNewRoman-10" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0"/>
+  </Styles>
+  <TfrxDataPage Name="Data" Height="1000" Left="0" Top="0" Width="1000"/>
+  <TfrxReportPage Name="Page1" PaperWidth="210" PaperHeight="297" PaperSize="9" LeftMargin="10" RightMargin="10" TopMargin="10" BottomMargin="10" ColumnWidth="95" ColumnPositions.Text="" HGuides.Text="" VGuides.Text="">
+    <TfrxMasterData Name="MasterData1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="94,48825" Left="0" Top="374,17347" Width="718,1107" AllowSplit="True" ColumnWidth="0" ColumnGap="0" DataSet="frxPatientInfo" DataSetName="frxPatientInfo" RowCount="1">
+      <TfrxMemoView Name="Memo1" Left="0" Top="0" Width="287,24428" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Text="Тегі, аты, әкесінің аты  (Фамилия, имя, отчество):"/>
+      <TfrxMemoView Name="frxPatientInfofullname" Left="291,02381" Top="0" Width="423,30736" Height="18,89765" DataField="fullname" DataSet="frxPatientInfo" DataSetName="frxPatientInfo" Font.Charset="1" Font.Color="0" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" WordWrap="False" Text="[frxPatientInfo.&#34;fullname&#34;]"/>
+      <TfrxMemoView Name="Memo2" Left="0" Top="18,8976499999999" Width="166,29932" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Text="Туған күні (Дата рождения):"/>
+      <TfrxMemoView Name="frxPatientInfobirthday" Left="166,29932" Top="18,8976499999999" Width="147,40167" Height="18,89765" DataField="birthday" DataSet="frxPatientInfo" DataSetName="frxPatientInfo" Font.Charset="1" Font.Color="0" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" WordWrap="False" Text="[frxPatientInfo.&#34;birthday&#34;]"/>
+      <TfrxMemoView Name="Memo3" Left="0" Top="37,7952999999999" Width="166,29932" Height="18,89765" Font.Charset="1" Font.Color="0" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Text="Жынысы (е, ә) (Пол (м, ж)):"/>
+      <TfrxMemoView Name="Memo4" Left="166,29932" Top="37,7952999999999" Width="147,40167" Height="18,89765" DataField="sex" DataSet="frxPatientInfo" DataSetName="frxPatientInfo" Font.Charset="1" Font.Color="0" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" WordWrap="False" Text="[frxPatientInfo.&#34;sex&#34;]"/>
+      <TfrxMemoView Name="Memo5" Left="0" Top="75,5905999999999" Width="120,94496" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="Кәсібі (Профессия):"/>
+      <TfrxMemoView Name="Memo6" Left="124,72449" Top="56,6929499999999" Width="555,59091" Height="18,89765" DataField="address" DataSet="frxPatientInfo" DataSetName="frxPatientInfo" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" WordWrap="False" Text="[frxPatientInfo.&#34;address&#34;]"/>
+      <TfrxMemoView Name="Memo7" Left="0" Top="56,6929499999999" Width="120,94496" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="Мекенжайы (адрес):"/>
+      <TfrxMemoView Name="Memo8" Left="124,72449" Top="75,5905999999999" Width="555,59091" Height="18,89765" DataField="proff" DataSet="frxPatientInfo" DataSetName="frxPatientInfo" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" WordWrap="False" Text="[frxPatientInfo.&#34;proff&#34;]"/>
+    </TfrxMasterData>
+    <TfrxReportTitle Name="ReportTitle1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="294,80334" Left="0" Top="18,89765" Width="718,1107">
+      <TfrxMemoView Name="Memo13" Left="415,7483" Top="3,77953" Width="287,24428" Height="41,57483" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" Frame.Typ="15" ParentFont="False" Style="TimesNewRoman-10" Text="КҰЖЖ бойынша ұйым коды &#13;&#10;Код организации по ОКПО__________"/>
+      <TfrxMemoView Name="Memo14" Left="415,7483" Top="45,35436" Width="287,24428" Height="79,37013" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" Frame.Typ="15" ParentFont="False" Style="TimesNewRoman-10" Text="Қазақстан Республикасы &#13;&#10;Денсаулық сақтау министрінің м.а. 2010 жылғы&#13;&#10;«23» қарашадағы № 907 бұйрығымен бекітілген &#13;&#10;№ 043/е нысанды&#13;&#10;медициналық құжаттама"/>
+      <TfrxMemoView Name="Memo15" Left="415,7483" Top="124,72449" Width="287,24428" Height="79,37013" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" Frame.Typ="15" ParentFont="False" Text="Медицинская документация&#13;&#10;Форма №043/у&#13;&#10;Утверждена приказом и.о. Министра здравоохранения Республики Казахстан  &#13;&#10;«23» ноября 2010 года №907"/>
+    </TfrxReportTitle>
+    <TfrxMasterData Name="MasterData2" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="532,91373" Width="718,1107" AllowSplit="True" ColumnWidth="0" ColumnGap="0" DataSet="frxPatientDiagnosis" DataSetName="frxPatientDiagnosis" RowCount="0">
+      <TfrxMemoView Name="frxPatientDiagnosiscontent" Left="15,11812" Top="0" Width="684,09493" Height="18,89765" DataField="content" DataSet="frxPatientDiagnosis" DataSetName="frxPatientDiagnosis" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="[frxPatientDiagnosis.&#34;content&#34;]"/>
+    </TfrxMasterData>
+    <TfrxMasterData Name="MasterData3" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="616,06339" Width="718,1107" AllowSplit="True" ColumnWidth="0" ColumnGap="0" DataSet="frxPatientZhaloby" DataSetName="frxPatientZhaloby" RowCount="0">
+      <TfrxMemoView Name="frxPatientZhalobycontent" Left="15,11812" Top="0" Width="684,09493" Height="18,89765" DataField="content" DataSet="frxPatientZhaloby" DataSetName="frxPatientZhaloby" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="[frxPatientZhaloby.&#34;content&#34;]"/>
+    </TfrxMasterData>
+    <TfrxHeader Name="Header1" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="491,3389" Width="718,1107" AllowSplit="True">
+      <TfrxMemoView Name="Memo9" Left="0" Top="0" Width="94,48825" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="Диагноз"/>
+    </TfrxHeader>
+    <TfrxHeader Name="Header2" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="574,48856" Width="718,1107" AllowSplit="True">
+      <TfrxMemoView Name="Memo10" Left="0" Top="0" Width="188,9765" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="Шағымы (Жалобы)"/>
+    </TfrxHeader>
+    <TfrxMasterData Name="MasterData4" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="699,21305" Width="718,1107" AllowSplit="True" ColumnWidth="0" ColumnGap="0" DataSet="frxPatientPISZ" DataSetName="frxPatientPISZ" RowCount="0">
+      <TfrxMemoView Name="frxPatientPISZcontent" Left="15,11812" Top="0" Width="684,09493" Height="18,89765" DataField="content" DataSet="frxPatientPISZ" DataSetName="frxPatientPISZ" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="[frxPatientPISZ.&#34;content&#34;]"/>
+    </TfrxMasterData>
+    <TfrxHeader Name="Header3" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="657,63822" Width="718,1107" AllowSplit="True">
+      <TfrxMemoView Name="Memo11" Left="0" Top="0" Width="604,7248" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="Бұрын ауырған және қосалқы сырқаттары (Перенесенные и сопутствующие заболевания)"/>
+    </TfrxHeader>
+    <TfrxHeader Name="Header4" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="740,78788" Width="718,1107" AllowSplit="True">
+      <TfrxMemoView Name="Memo12" Left="0" Top="0" Width="604,7248" Height="18,89765" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="Осы сырқаттың дамуы (Развитие настоящего заболевания)"/>
+    </TfrxHeader>
+    <TfrxMasterData Name="MasterData6" FillType="ftBrush" FillGap.Top="0" FillGap.Left="0" FillGap.Bottom="0" FillGap.Right="0" Height="18,89765" Left="0" Top="782,36271" Width="718,1107" ColumnWidth="0" ColumnGap="0" DataSet="frxUserDataSet1" DataSetName="frxUserDataSet1" RowCount="0">
+      <TfrxMemoView Name="frxUserDataSet1field" Left="15,11812" Top="0" Width="589,60668" Height="18,89765" DataField="field" DataSet="frxUserDataSet1" DataSetName="frxUserDataSet1" Font.Charset="1" Font.Color="-16777208" Font.Height="-13" Font.Name="Times New Roman" Font.Style="0" ParentFont="False" Style="TimesNewRoman-10" Text="[frxUserDataSet1.&#34;field&#34;]"/>
+    </TfrxMasterData>
+  </TfrxReportPage>
+</TfrxReport>

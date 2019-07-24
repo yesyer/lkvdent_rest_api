@@ -1,13 +1,5 @@
 { константы в таблице tb_tree, особенно важно дл€ id 6-10
 
-
-
-
-
-
-
-
-
   id, parent_id, content, is_init_exam, is_enable
 
   1 	NULL 	∆алобы 	                                  0 	1
@@ -173,8 +165,9 @@ type
     procedure aaaModifyStyle(s: ShortInt);
     procedure aaaPatientFieldClear;
     procedure aaaPatientFilter(FilterStr: String; FCol: SmallInt);
-    procedure aaaCardRefresh(patient_id: String);
+    procedure aaaToothButtonCheck(ATooth: String);
     procedure aaaToothButtonUncheck(ARow: Integer);
+    procedure aaaToothButtonUncheckAll;
     procedure aaaToothButtonsSet;
     procedure logger(metod, text: String);
 
@@ -217,6 +210,8 @@ type
     procedure comboEmployeeChange(Sender: TObject);
     procedure buttonCloseClick(Sender: TObject);
     procedure buttonPrintClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     { Private declarations }
     insertParentId, insertContent, insertInitExam, insertEnable: TStrings;
@@ -228,6 +223,9 @@ type
 var
   fmMain: TfmMain;
   glModifyNode: TAdvTreeViewVirtualNode; // сохран€ем нод
+
+  arrayDiagnosis, arrayZhaloby, arrayPISZ, arrayRNZ: TStrings;
+  arrayCardTreeDelete: TStrings;
 
   // glModifyClient: Boolean; // true - append, false - modify
 implementation
@@ -384,10 +382,37 @@ begin
 
 end;
 
-procedure TfmMain.aaaCardRefresh(patient_id: String);
-
+procedure TfmMain.aaaToothButtonCheck(ATooth: String);
+var
+  i, j, b: Integer;
+  sTooth, sTooths: String;
 begin
-
+  // запоминаем строку ввида 48:47:46:
+  sTooths := ATooth;
+  // повтор€ем до тех пор пока количество символов больше 0
+  while Length(sTooths) <> 0 do
+  begin
+    // выдергиваем первую пару цифр 48
+    sTooth := Copy(sTooths, 1, AnsiPos(':', sTooths) - 1);
+    for b := 0 to plTooths.ComponentCount - 1 do
+      if plTooths.Components[b] is TAdvGlassButton then
+        if (plTooths.Components[b] as TAdvGlassButton).GroupIndex = StrToInt(sTooth) then
+        begin
+          (plTooths.Components[b] as TAdvGlassButton).Tag :=
+            (plTooths.Components[b] as TAdvGlassButton).Tag + 1;
+          // проверка на 1 чтоб при последующих совпадений не присваивать почем зр€
+          if (plTooths.Components[b] as TAdvGlassButton).Tag = 1 then
+          begin
+            (plTooths.Components[b] as TAdvGlassButton).Picture :=
+              btnToothTmp.PictureDisabled;
+            // необ€зательно, т.к. форму мы кнопки мы только что нормализовали
+            // (pnTooths.Components[i] as TAdvGlassButton).Down:= false;
+          end;
+        end;
+    // удал€ем обработанные коды зубов, удалитьс€ 48:, останетьс€ 47:46:
+    Delete(sTooths, 1, AnsiPos(':', sTooths));
+    // a:= AnsiPos(':',trvCardContentRoot.SelectedNode.Text[2]);
+  end;
 end;
 
 { нормализуем кнопки зубов в нормальный вид при отмене выбора в окне
@@ -422,6 +447,20 @@ begin
     // a:= AnsiPos(':',trvCardContentRoot.SelectedNode.Text[2]);
   end;
   // end;
+end;
+
+procedure TfmMain.aaaToothButtonUncheckAll;
+var
+  i: Integer;
+begin
+  // нормализуем кнопки
+  for i := 0 to plTooths.ComponentCount - 1 do
+    if plTooths.Components[i] is TAdvGlassButton then
+    begin
+      (plTooths.Components[i] as TAdvGlassButton).Tag := 0;
+      (plTooths.Components[i] as TAdvGlassButton).Picture := btnToothTmp.Picture;
+      (plTooths.Components[i] as TAdvGlassButton).Down := false;
+    end;
 end;
 
 { рисуем кнопки "зубы" }
@@ -699,11 +738,30 @@ end;
 
 procedure TfmMain.buttonPrintClick(Sender: TObject);
 begin
+  arrayDiagnosis := TStringList.Create;
+  arrayZhaloby := TStringList.Create;
+  arrayPISZ := TStringList.Create;
+  arrayRNZ := TStringList.Create;
+
   with dmDataModule do
   begin
 
+    fieldsPatientTitle(gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]],
+      arrayDiagnosis, arrayZhaloby, arrayPISZ, arrayRNZ);
+
+    frxPatientDiagnosis.RangeEndCount := arrayDiagnosis.Count;
+    frxPatientZhaloby.RangeEndCount := arrayZhaloby.Count;
+    frxPatientPISZ.RangeEndCount := arrayPISZ.Count;
+    // frxPatientRNZ.RangeEndCount:=arrayRNZ.Count;
+
     frxPatientCard.ShowReport;
+    fmMain.Caption := IntToStr(arrayRNZ.Count);
   end;
+
+  arrayDiagnosis.Free;
+  arrayZhaloby.Free;
+  arrayPISZ.Free;
+  arrayRNZ.Free;
 end;
 
 procedure TfmMain.buttonPatientInsertClick(Sender: TObject);
@@ -750,6 +808,9 @@ end;
 
 procedure TfmMain.buttonPatientCardModifyBackClick(Sender: TObject);
 begin
+  patientCard(gridCardList, gridPatient.Cells[GRID_PATIENT_ID,
+    gridPatient.SelectedRow[0]]);
+
   plSettings.Visible := false;
   plPatient.Visible := false;
   plPatientCardList.Visible := true;
@@ -759,6 +820,7 @@ end;
 procedure TfmMain.buttonPatientCardModifyClick(Sender: TObject);
 var
   i: Integer;
+  fmt: TFormatSettings;
 begin
   { TODO верефикаци€, сохранить карточку, сохранить изменени€ карточки }
   if gridCardList.Cells[GRID_CARD_LIST_CREATED, gridCardList.SelectedRow[0]] = '' then
@@ -771,9 +833,18 @@ begin
   else
     treeNodeRootContent(treeNodeRootCard, '0');
 
+  if treeNodeRootCard.Nodes[0] <> nil then
+  begin
+    treeNodeRootCard.SelectNode(treeNodeRootCard.Nodes[0]);
+    treeNodeContent(treeNodeCard, treeNodeRootCard.Nodes[0]);
+  end
+  else
+    treeNodeCard.ClearNodes;
+
   gridCard.Clear;
   gridCard.RowCount := 2;
   employeeList(gridEmployee, comboEmployee, comboEmployeeID, comboEmployeeOrign);
+  aaaToothButtonUncheckAll;
 
   if gridCardList.SelectedRow[0] = 1 then
     patientCardView(gridCard, gridCardList.Cells[GRID_CARD_LIST_ID,
@@ -787,8 +858,22 @@ begin
       gridCardList.SelectedRow[0]] then
     begin
       comboEmployee.ItemIndex := i;
-      comboEmployeeChange(Sender);
+      comboEmployeeID.ItemIndex := i;
+      comboEmployeeOrign.ItemIndex := i;
     end;
+
+  // выводим дату создани€
+  GetLocaleFormatSettings(0, fmt);
+  fmt.ShortDateFormat := 'yyyy-MM-dd HH:mm:ss';
+  fmt.DateSeparator := '-';
+  dateCard.DateTime := StrToDateTime(gridCardList.Cells[GRID_CARD_LIST_CREATED,
+    gridCardList.SelectedRow[0]], fmt);
+
+  labelName.Caption := gridCardList.Cells[GRID_CARD_LIST_NAME,
+    gridCardList.SelectedRow[0]];
+
+
+  arrayCardTreeDelete.Clear;
 
   plSettings.Visible := false;
   plPatient.Visible := false;
@@ -799,12 +884,23 @@ end;
 procedure TfmMain.buttonPatientCardSaveClick(Sender: TObject);
 begin
   { TODO верефикаци€, сохранить карточку, сохранить изменени€ карточки }
-  if gridCardList.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]] = '' then
+  if gridCardList.Cells[GRID_CARD_LIST_ID, gridPatient.SelectedRow[0]] = '' then
     patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
       gridPatient.SelectedRow[0]], comboEmployeeID.text, '1')
+  else if comboEmployee.ItemIndex <> comboEmployeeOrign.ItemIndex then
+    patientCardModifySave(gridCard, comboEmployeeID.text,
+      gridCardList.Cells[GRID_CARD_LIST_ID, gridCardList.SelectedRow[0]])
   else
-    patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
-      gridPatient.SelectedRow[0]], comboEmployeeID.text, '0');
+    patientCardModifySave(gridCard, '', gridCardList.Cells[GRID_CARD_LIST_ID,
+      gridCardList.SelectedRow[0]]);
+
+  patientCard(gridCardList, gridPatient.Cells[GRID_PATIENT_ID,
+    gridPatient.SelectedRow[0]]);
+
+  plSettings.Visible := false;
+  plPatient.Visible := false;
+  plPatientCardList.Visible := true;
+  plPatientCardModify.Visible := false;
 end;
 
 procedure TfmMain.buttonCloseClick(Sender: TObject);
@@ -1016,6 +1112,7 @@ begin
   gridCard.Clear;
   gridCard.RowCount := 2;
   employeeList(gridEmployee, comboEmployee, comboEmployeeID, comboEmployeeOrign);
+  aaaToothButtonUncheckAll;
 
   // DateTimePicker1.Date:=StrToDateTime(gridCardList.Cells[GRID_CARD_LIST_CREATED,gridCardList.SelectedRow[0]]);
   dateCard.DateTime := now;
@@ -1066,6 +1163,16 @@ begin
   editFName.SetFocus;
 end;
 
+procedure TfmMain.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  arrayCardTreeDelete.Free;
+end;
+
+procedure TfmMain.FormCreate(Sender: TObject);
+begin
+  arrayCardTreeDelete := TStringList.Create;
+end;
+
 procedure TfmMain.FormShow(Sender: TObject);
 begin
   aaaToothButtonsSet;
@@ -1074,9 +1181,14 @@ end;
 // TODO ƒоделать процедуру редактировани€ сотрудника
 procedure TfmMain.gridCardDblClickCell(Sender: TObject; ARow, ACol: Integer);
 begin
-  aaaToothButtonUncheck(ARow);
-  // 1 - константа, количество удал€емых строк
-  gridCard.RemoveRows(ARow, 1);
+  if (ARow > 0) and (ACol > 0) then
+  begin
+    aaaToothButtonUncheck(ARow);
+    // 1 - константа, количество удал€емых строк
+    if gridCard.Cells[GRID_CARD_ID, ARow] <> '' then
+      arrayCardTreeDelete.Add(gridCard.Cells[GRID_CARD_ID, ARow]);
+    gridCard.RemoveRows(ARow, 1);
+  end;
 end;
 
 procedure TfmMain.gridEmployeeDblClickCell(Sender: TObject; ARow, ACol: Integer);
@@ -1178,12 +1290,13 @@ procedure TfmMain.plMainTopClick(Sender: TObject);
 var
   fmt: TFormatSettings;
 begin
-  GetLocaleFormatSettings(0, fmt);
-  fmt.ShortDateFormat := 'yyyy-MM-dd';
-  fmt.DateSeparator := '-';
-  fmMain.Caption := DateToStr(dateBirthday.Date, fmt);
+  { GetLocaleFormatSettings(0, fmt);
+    fmt.ShortDateFormat := 'yyyy-MM-dd';
+    fmt.DateSeparator := '-';
+    fmMain.Caption := DateToStr(dateBirthday.Date, fmt);
 
-  aaaToothButtonsSet;
+    aaaToothButtonsSet; }
+  aaaToothButtonUncheckAll;
 end;
 
 procedure TfmMain.tabEmployeeShow(Sender: TObject);
@@ -1194,7 +1307,8 @@ end;
 
 procedure TfmMain.tabTreeShow(Sender: TObject);
 begin
-  treeNodeRootContent(treeNodeRootSetting);
+  // 2-признак того чтобы вывести ¬—≈ корневые узлы (кроме зарезервированных)
+  treeNodeRootContent(treeNodeRootSetting, '2');
   treeNodeSetting.ColumnsAppearance.StretchColumn := 0;
 end;
 
@@ -1270,6 +1384,7 @@ end;
 procedure TfmMain.treeNodeCardNodeDblClick(Sender: TObject;
   ANode: TAdvTreeViewVirtualNode);
 var
+  PNode: TAdvTreeViewVirtualNode;
   sTooths: String;
   i: SmallInt;
 begin
@@ -1297,9 +1412,15 @@ begin
     if gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] <> '' then
       gridCard.RowCount := gridCard.RowCount + 1;
 
-    if treeNodeRootCard.Nodes.Count = 1 then
-      gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
-        treeNodeRootCard.SelectedNode.
+    if treeNodeRootCard.Nodes.Count <= MAX_ROOT_NODE_INIT_EXAM then
+    begin
+      PNode := ANode.GetParent;
+      repeat
+        gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] := PNode.Node.text[0];
+        PNode := PNode.GetParent;
+      until PNode = nil;
+    end
+    // treeNodeRootCard.SelectedNode.text[TREE_NODE_ROOT_CONTENT]
     else
       gridCard.Cells[GRID_CARD_ROOTNODE, gridCard.RowCount - 1] :=
         treeNodeRootCard.SelectedNode.text[TREE_NODE_ROOT_CONTENT];
@@ -1311,6 +1432,8 @@ begin
 
     gridCard.Cells[GRID_CARD_TREE_ID, gridCard.RowCount - 1] :=
       ANode.Node.text[TREE_NODE_ID];
+
+    gridCard.ScrollInView(1, gridCard.RowCount - 1);
   end;
 end;
 

@@ -1,4 +1,105 @@
-﻿SELECT cd.id, cd.patient_id, CONCAT(pt.fname, " ", LEFT(pt.name,1), ".", IF(pt.lname="", "", " "), IF(pt.lname="", "", LEFT(pt.lname,1)), IF(pt.lname="", "", ".")) as name, cd.notes, em.name as em_name, cd.is_init_exam, cd.created
+﻿SELECT
+    `t`.`id` AS `id`,
+    `t`.`parent_id` AS `parent_id`,
+    `t`.`content` AS `content`,
+    `t`.`is_init_exam` AS `is_init_exam`,
+    `t`.`is_enable` AS `is_enable`,
+    `tp`.`path` AS `path`,
+    (
+    SELECT
+        `t2`.`id`
+    FROM
+        (
+            `lkvdent`.`tb_tree` `t2`
+        JOIN `lkvdent`.`tb_tree_path` `tp2`
+        ON
+            ((`tp2`.`id` = `t2`.`id`))
+        )
+    WHERE
+        (`tp2`.`path` LIKE LEFT(`tp`.`path`, 3))
+) AS `root_id`,
+(
+    SELECT
+        `t2`.`content`
+    FROM
+        (
+            `lkvdent`.`tb_tree` `t2`
+        JOIN `lkvdent`.`tb_tree_path` `tp2`
+        ON
+            ((`tp2`.`id` = `t2`.`id`))
+        )
+    WHERE
+        (`tp2`.`path` LIKE LEFT(`tp`.`path`, 3))
+) AS `root`,
+(
+    SELECT
+        `t5`.`id`
+    FROM
+        (
+            `lkvdent`.`tb_tree` `t5`
+        JOIN `lkvdent`.`tb_tree_path` `tp5`
+        ON
+            ((`tp5`.`id` = `t5`.`id`))
+        )
+    WHERE
+        (
+            (
+                LOCATE(
+                    `tp5`.`path`,
+                    (
+                    SELECT
+                        `tp6`.`path`
+                    FROM
+                        `lkvdent`.`tb_tree_path` `tp6`
+                    WHERE
+                        (`tp6`.`id` = `t`.`id`)
+                )
+                ) <> 0
+            ) AND(`t5`.`parent_id` IS NOT NULL)
+        )
+    ORDER BY
+        `tp5`.`path`
+    LIMIT 1
+) AS `subroot_id`,(
+    SELECT
+        `t3`.`content`
+    FROM
+        (
+            `lkvdent`.`tb_tree` `t3`
+        JOIN `lkvdent`.`tb_tree_path` `tp3`
+        ON
+            ((`tp3`.`id` = `t3`.`id`))
+        )
+    WHERE
+        (
+            (
+                LOCATE(
+                    `tp3`.`path`,
+                    (
+                    SELECT
+                        `tp4`.`path`
+                    FROM
+                        `lkvdent`.`tb_tree_path` `tp4`
+                    WHERE
+                        (`tp4`.`id` = `t`.`id`)
+                )
+                ) <> 0
+            ) AND(`t3`.`parent_id` IS NOT NULL)
+        )
+    ORDER BY
+        `tp3`.`path`
+    LIMIT 1
+) AS `subroot`
+FROM
+    (
+        `lkvdent`.`tb_tree` `t`
+    JOIN `lkvdent`.`tb_tree_path` `tp`
+    ON
+        ((`tp`.`id` = `t`.`id`))
+    )
+
+
+SELECT cd.id, cd.patient_id, CONCAT(pt.fname, " ", LEFT(pt.name,1), ".", IF(pt.lname="", "", " "), IF(pt.lname="", "", LEFT(pt.lname,1)), IF(pt.lname="", "", ".")) as name, cd.notes, em.name as em_name, cd.is_init_exam, cd.created
 FROM tb_card cd
 join tb_patient pt 
 join tb_employee em
