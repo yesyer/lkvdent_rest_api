@@ -6,22 +6,39 @@ uses
   System.SysUtils,
   System.Classes,
   System.JSON,
+  syncobjs,
   Vcl.StdCtrls,
+  Vcl.Forms,
   REST.Types,
+  REST.Client,
   AdvTreeView,
   AdvTreeViewData,
   AdvGrid,
   AdvGlassButton;
 
 const
+  // оставил в виде константы максимальное количество корневых узлов при
+  // первичном осмотре
   MAX_ROOT_NODE_INIT_EXAM = 1;
+  // максимальнок количество символов в поле tb_tree.content
+  MAX_LENGHT_TREE_CONTENT = 1000;
+  MAX_LENGHT_EMPLOYEE_NAME = 40;
+
+  SQL_INSERT_CARD = 'INSERT INTO local_Card (id, name, created) VALUES';
+  SQL_INSERT_CARD_DETAILS =
+    'INSERT INTO local_CardDetails (id, card_id, tooth, content, root) VALUES';
+  SQL_INSERT_CARD_TITLE =
+    'INSERT INTO local_CardTitle (id, content, subroot_id, subroot) VALUES';
+  SQL_INSERT_TREE =
+    'INSERT INTO local_Tree (id, update_id, parent_id, content, is_init_exam, is_enable, metod) VALUES';
+
+  SQL_MEDOT_POST = 'POST';
+  SQL_MEDOT_PUT = 'PUT';
+
+  SQL_SELECT_TREE_WHERE = 'SELECT * FROM local_Tree WHERE metod LIKE ';
 
   STATUS_OK = '200';
   STATUS_NO_CONTENT = '204';
-
-  LOG_GET = 'GET';
-  LOG_POST = 'POST';
-  LOG_PUT = 'PUT';
 
   GRID_EMPLOYEE_ID = 4;
   GRID_EMPLOYEE_NAME = 1;
@@ -69,7 +86,7 @@ const
   TREE_NODE_ID = 3;
   TREE_NODE_PARENT_ID = 4;
   TREE_NODE_CONTENT = 0;
-  TREE_NODE_INIT_EXAM = 1;
+  // TREE_NODE_INIT_EXAM = 1;
   TREE_NODE_ENABLE = 2;
 
   TREE_NODE_NEW_PARENT_ID = 5;
@@ -77,14 +94,16 @@ const
 
   TEXT_ACTIVE = 'Активный';
   TEXT_INACTIVE = 'Не активный';
-  TEXT_YES = 'Да';
-  TEXT_NOT = 'Нет';
+  // TEXT_YES = 'Да';
+  // TEXT_NOT = 'Нет';
   TEXT_MEN = 'Муж.';
   TEXT_WOMEN = 'Жен.';
   TEXT_NAME_TEMPLATE = 'Текст шаблона';
   TEXT_NAME_EMPLOYEE = 'Введите Фамилия И.О.';
 
   JSON_STATUS = 'status';
+  JSON_SUB_RESPONSE1 = 'sub-response1';
+  JSON_SUB_RESPONSE2 = 'sub-response2';
   JSON_RESPONSE = 'response';
 
   JSON_ID = 'id';
@@ -152,19 +171,181 @@ procedure patientCardModifySave(stringGrid: TAdvStringGrid; employeeId: String;
 
 procedure patientCardView(stringGrid: TAdvStringGrid; cardId, initExam: String);
 procedure patientRefresh(stringGrid: TAdvStringGrid);
+
 procedure employeeList(gridEmployee: TAdvStringGrid; comboEmployee, comboEmployeeId,
   comboEmployeeOrign: TComboBox);
 procedure employeeModify(style: Boolean; AName: String; isEnable: Boolean; id: String);
 
-procedure fieldsPatientTitle(patientId: String; var arrayDiagnosis, arrayZhaloby,
-  arrayPISZ, arrayRNZ: TStrings);
+{ procedure fieldsPatientTitle(patientId: String; var arrayDiagnosis, arrayZhaloby,
+  arrayPISZ, arrayRNZ: TStrings); }
+procedure fieldsPatientReport(patientId: String);
+
+procedure treeNodeSave(PNode: TAdvTreeViewNode);
+
+{ var
+  FCS: TCriticalSection; }
 
 implementation
 
-uses uDataModule, uMain;
+uses uDataModule, uMain, uTRESTRequest;
 
 // var
 // arrayDiagnosis :TStrings;
+
+function RESTRequest(AMethod: TRESTRequestMethod; AResource: String;
+  AParams: TRESTRequestParameterList = nil): String;
+var
+  executeThread: TRESTExecutionThread;
+  thread: TThread;
+  s: String;
+begin
+  with dmDataModule do
+  begin
+    RESTRequest1.ClearBody;
+    RESTRequest1.Params.Clear;
+
+    RESTRequest1.Method := AMethod;
+    RESTRequest1.Resource := AResource;
+
+    // RESTClient1.
+    if AParams <> nil then
+      RESTRequest1.Params := AParams;
+
+    fmMain.plLoading.Visible := true;
+
+    fmMain.logger(AMethod, AResource, RESTClient1.BaseURL);
+    // RESTRequest1.Execute;
+    thread := TRESTRequest.Create(true);
+    thread.FreeOnTerminate := false;
+    thread.Start;
+    // RESTRequest1.Execute;
+    while thread.Finished <> true do
+    begin
+      sleep(10);
+      Application.ProcessMessages;
+    end;
+
+    thread.Free;
+    fmMain.plLoading.Visible := false;
+    s := '';
+    // executeThread.Free;
+    if (RESTResponse1.StatusCode <> 200) then
+    begin
+      fmMain.logger(AMethod, AResource, Format('Ошибка сервера %d "%s"',
+        [RESTResponse1.StatusCode, RESTResponse1.StatusText]));
+      raise Exception.CreateFmt('Ошибка сервера %d "%s"',
+        [RESTResponse1.StatusCode, RESTResponse1.StatusText]);
+    end;
+
+    s := RESTResponse1.JSONValue.ToString;
+    fmMain.logger(AMethod, AResource, s);
+    s := '';
+    Result := RESTResponse1.JSONValue.ToString;
+  end;
+end;
+
+procedure fieldsPatientReport(patientId: String);
+var
+  OriginalJSONObject: TJSONObject;
+  joItems: TJSONArray;
+  joItem: TJSONObject;
+  JSONString: String;
+  status: String;
+
+  i: Integer;
+begin
+  with dmDataModule do
+  begin
+    if LocalDB.Connected = false then
+      LocalDB.Connected := true;
+
+    localCard.Close;
+    localCardDetails.Close;
+    localCardTitle.Close;
+
+    localDropTableCard.ExecSQL;
+    localCreateTableCard.ExecSQL;
+
+    JSONString := RESTRequest(rmGET, 'report/' + patientId);
+    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+    fmMain.Memo1.Lines.Clear;
+    status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
+    if status = STATUS_OK then
+    begin
+
+      joItems := OriginalJSONObject.GetValue(JSON_SUB_RESPONSE1) as TJSONArray;
+      localExecSQL.SQL.Clear;
+      localExecSQL.SQL.Add(SQL_INSERT_CARD_TITLE);
+      for i := 0 to joItems.Count - 1 do
+      begin
+        joItem := joItems.Items[i] as TJSONObject;
+        if i = joItems.Count - 1 then
+          localExecSQL.SQL.Add('(' + joItem.GetValue(JSON_ID).Value + ', ''' +
+            joItem.GetValue(JSON_CONTENT).Value + ''', ''' +
+            joItem.GetValue(JSON_SUBROOT_ID).Value + ''', ''' +
+            joItem.GetValue(JSON_SUBROOT).Value + ''');')
+        else
+          localExecSQL.SQL.Add('(' + joItem.GetValue(JSON_ID).Value + ', ''' +
+            joItem.GetValue(JSON_CONTENT).Value + ''', ''' +
+            joItem.GetValue(JSON_SUBROOT_ID).Value + ''', ''' +
+            joItem.GetValue(JSON_SUBROOT).Value + '''),')
+      end;
+      localExecSQL.ExecSQL;
+      fmMain.Memo1.Lines := localExecSQL.SQL;
+
+      joItems := OriginalJSONObject.GetValue(JSON_SUB_RESPONSE2) as TJSONArray;
+      localExecSQL.SQL.Clear;
+      if joItems.Count > 0 then
+      begin
+        localExecSQL.SQL.Add(SQL_INSERT_CARD);
+        for i := 0 to joItems.Count - 1 do
+        begin
+          joItem := joItems.Items[i] as TJSONObject;
+          if i = joItems.Count - 1 then
+            localExecSQL.SQL.Add('(' + joItem.GetValue(JSON_ID).Value + ', ''' +
+              joItem.GetValue(JSON_NAME).Value + ''', ''' + joItem.GetValue(JSON_CREATED)
+              .Value + ''');')
+          else
+            localExecSQL.SQL.Add('(' + joItem.GetValue(JSON_ID).Value + ', ''' +
+              joItem.GetValue(JSON_NAME).Value + ''', ''' + joItem.GetValue(JSON_CREATED)
+              .Value + '''),');
+        end;
+        localExecSQL.ExecSQL;
+        fmMain.Memo1.Lines.Add('');
+        fmMain.Memo1.Lines.AddStrings(localExecSQL.SQL);
+      end;
+
+      joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
+      localExecSQL.SQL.Clear;
+      if joItems.Count > 0 then
+      begin
+        localExecSQL.SQL.Add(SQL_INSERT_CARD_DETAILS);
+        for i := 0 to joItems.Count - 1 do
+        begin
+          joItem := joItems.Items[i] as TJSONObject;
+          if i = joItems.Count - 1 then
+            localExecSQL.SQL.Add('(' + IntToStr(i + 1) + ', ' +
+              joItem.GetValue(JSON_CARD_ID).Value + ', ''' + joItem.GetValue(JSON_TOOTH)
+              .Value + ''', ''' + joItem.GetValue(JSON_CONTENT).Value + ''', ''' +
+              joItem.GetValue(JSON_ROOT).Value + ''');')
+          else
+            localExecSQL.SQL.Add('(' + IntToStr(i + 1) + ', ' +
+              joItem.GetValue(JSON_CARD_ID).Value + ', ''' + joItem.GetValue(JSON_TOOTH)
+              .Value + ''', ''' + joItem.GetValue(JSON_CONTENT).Value + ''', ''' +
+              joItem.GetValue(JSON_ROOT).Value + '''),')
+        end;
+        localExecSQL.ExecSQL;
+        fmMain.Memo1.Lines.Add('');
+        fmMain.Memo1.Lines.AddStrings(localExecSQL.SQL);
+      end;
+
+      localCard.Open;
+      localCardDetails.Open;
+      localCardTitle.Open;
+    end;
+  end; //
+  FreeAndNil(OriginalJSONObject);
+end;
 
 procedure fieldsPatientTitle(patientId: String; var arrayDiagnosis, arrayZhaloby,
   arrayPISZ, arrayRNZ: TStrings);
@@ -185,7 +366,7 @@ begin
   with dmDataModule do
   begin
     RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'report/' + patientId;
+    RESTRequest1.Resource := 'report-title/' + patientId; // report-title
     RESTRequest1.Params.Clear;
     RESTRequest1.Execute;
     JSONString := RESTResponse1.JSONValue.ToString;
@@ -217,11 +398,6 @@ begin
   FreeAndNil(OriginalJSONObject);
 end;
 
-procedure fieldsPatientDetails;
-begin
-
-end;
-
 { заполняет данными указанный корневой treeView
   treeView - TAdvTreeView для которого заполняется контент
   all = false - заполнять только автивные элементы
@@ -238,16 +414,8 @@ var
 
   Node: TAdvTreeViewNode;
 begin
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'tree';
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
+  JSONString := RESTRequest(rmGET, 'tree');
+  OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
 
   status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
   if status = STATUS_OK then
@@ -260,6 +428,7 @@ begin
     begin
       joItem := joItems.Items[i] as TJSONObject;
 
+      // initExam = '2' - вызывем из меню справочники
       if initExam = '2' then
       begin
         if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
@@ -276,13 +445,6 @@ begin
         Node.Text[TREE_NODE_ROOT_CONTENT] := joItem.GetValue(JSON_CONTENT).Value;
         Node.Text[TREE_NODE_ROOT_ID] := joItem.GetValue(JSON_ID).Value;
       end;
-
-      { if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
-        begin
-        Node := treeView.Nodes.Add;
-        Node.Text[TREE_NODE_ROOT_CONTENT] := joItem.GetValue(JSON_CONTENT).Value;
-        Node.Text[TREE_NODE_ROOT_ID] := joItem.GetValue(JSON_ID).Value;
-        end; }
     end;
     treeView.EndUpdate;
   end;
@@ -300,17 +462,17 @@ begin
   for i := 0 to joItems.Count - 1 do
   begin
     joItem := joItems.Items[i] as TJSONObject;
-    if joItem.GetValue(JSON_PARENT_ID).ToString = id then
+    if joItem.GetValue(JSON_PARENT_ID).Value = id then
     begin
       if (joItem.GetValue(JSON_IS_ENABLE).Value = '0') and (all = true) then
       begin
         CNode := treeView.AddNode(ANode);
         CNode.Text[TREE_NODE_CONTENT] := joItem.GetValue(JSON_CONTENT).Value;
 
-        if joItem.GetValue(JSON_IS_INIT_EXAM).Value = '1' then
+        { if joItem.GetValue(JSON_IS_INIT_EXAM).Value = '1' then
           CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_YES
-        else
-          CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
+          else
+          CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_NOT; }
 
         if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
           CNode.Text[TREE_NODE_ENABLE] := TEXT_ACTIVE
@@ -327,10 +489,10 @@ begin
         CNode := treeView.AddNode(ANode);
         CNode.Text[TREE_NODE_CONTENT] := joItem.GetValue(JSON_CONTENT).Value;
 
-        if joItem.GetValue(JSON_IS_INIT_EXAM).Value = '1' then
+        { if joItem.GetValue(JSON_IS_INIT_EXAM).Value = '1' then
           CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_YES
-        else
-          CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
+          else
+          CNode.Text[TREE_NODE_INIT_EXAM] := TEXT_NOT; }
 
         if joItem.GetValue(JSON_IS_ENABLE).Value = '1' then
           CNode.Text[TREE_NODE_ENABLE] := TEXT_ACTIVE
@@ -355,24 +517,18 @@ var
   joItems: TJSONArray;
   joItem: TJSONObject;
   JSONString: String;
-  status: Boolean;
+  status: String;
 
   i: Integer;
 begin
   treeView.BeginUpdate;
   treeView.ColumnsAppearance.StretchColumn := 0;
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'tree/' + ANode.Text[TREE_NODE_ROOT_ID];
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
 
-  status := OriginalJSONObject.GetValue(JSON_STATUS) is TJSONTrue;
-  if status = false then
+  JSONString := RESTRequest(rmGET, 'tree/' + ANode.Text[TREE_NODE_ROOT_ID]);
+  OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+
+  status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
+  if status = STATUS_OK then
   begin
     treeView.ClearNodes;
 
@@ -380,7 +536,7 @@ begin
     for i := 0 to joItems.Count - 1 do
     begin
       joItem := joItems.Items[i] as TJSONObject;
-      if joItem.GetValue(JSON_ID).ToString = ANode.Text[TREE_NODE_ROOT_ID] then
+      if joItem.GetValue(JSON_ID).Value = ANode.Text[TREE_NODE_ROOT_ID] then
         treeNodeBuild(treeView, joItem.GetValue(JSON_ID).ToString, joItems, nil, all);
     end;
   end;
@@ -404,22 +560,12 @@ begin
   stringGrid.BeginUpdate;
   stringGrid.Clear;
   stringGrid.ColumnHeaders.Clear;
+
   for i := 0 to GRID_CARD_LIST_COLUMN_COUNT do
     stringGrid.ColumnHeaders.Add(GRID_CARD_LIST_COLUMN[i]);
-  // stringGrid.ColumnHeader.cos.a;
 
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'card/' + patientId;
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-
-    fmMain.logger(LOG_GET, JSONString);
-
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
+  JSONString := RESTRequest(rmGET, 'card/' + patientId);
+  OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
 
   status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
   if status = STATUS_OK then
@@ -526,7 +672,7 @@ begin
         RESTRequest1.Execute;
 
         JSONString := RESTResponse1.JSONValue.ToString;
-        fmMain.logger(LOG_POST + ' cardtree', JSONString);
+        // fmMain.logger(LOG_POST + ' cardtree', JSONString);
       end;
 
     end;
@@ -539,7 +685,7 @@ procedure patientCardModifySave(stringGrid: TAdvStringGrid; employeeId: String;
   updateCardId: String);
 var
   OriginalJSONObject: TJSONObject;
-  joItem: TJSONObject;
+  // joItem: TJSONObject;
 
   JSONString: String;
   status: String;
@@ -570,10 +716,10 @@ begin
       end;
     end;
 
-    for i := 0 to arrayCardTreeDelete.Count - 1 do
+    for i := 0 to ACardTreeDelete.Count - 1 do
     begin
       RESTRequest1.Method := rmDELETE;
-      RESTRequest1.Resource := 'cardtree/' + arrayCardTreeDelete[i];
+      RESTRequest1.Resource := 'cardtree/' + ACardTreeDelete[i];
       RESTRequest1.Params.Clear;
 
       RESTRequest1.Execute;
@@ -625,7 +771,44 @@ begin
 
 end;
 
-procedure treeContent(treeId, initExam: String; var content, root: String);
+{ procedure treeContent(treeId, initExam: String; var content, root: String);
+  var
+  OriginalJSONObject: TJSONObject;
+  joItems: TJSONArray;
+  joItem: TJSONObject;
+
+  JSONString: String;
+  status: String;
+  i: Integer;
+  begin
+  // SetLength(result, 2);
+  with dmDataModule do
+  begin
+  RESTRequest1.Method := rmGET;
+  RESTRequest1.Resource := 'tree-one/' + treeId;
+  RESTRequest1.Params.Clear;
+  RESTRequest1.Execute;
+  JSONString := RESTResponse1.JSONValue.ToString;
+
+  end;
+  JSONString := RESTRequest(rmGET,)
+  OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+  status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
+  if status = STATUS_OK then
+  begin
+  joItem := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONObject;
+  // joItem := joItems.Items[0] as TJSONObject;
+  content := joItem.GetValue(JSON_CONTENT).Value;
+
+  if initExam = '1' then
+  root := joItem.GetValue(JSON_SUBROOT).Value
+  else
+  root := joItem.GetValue(JSON_ROOT).Value
+  end;
+  FreeAndNil(OriginalJSONObject);
+  end; }
+
+procedure patientCardView(stringGrid: TAdvStringGrid; cardId, initExam: String);
 var
   OriginalJSONObject: TJSONObject;
   joItems: TJSONArray;
@@ -635,90 +818,43 @@ var
   status: String;
   i: Integer;
 begin
-  // SetLength(result, 2);
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'tree-one/' + treeId;
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-  end;
+  stringGrid.Clear;
+  stringGrid.RowCount := 2;
+
+  JSONString := RESTRequest(rmGET, 'cardtree/' + cardId);
 
   OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
   status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
   if status = STATUS_OK then
   begin
-    joItem := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONObject;
-    // joItem := joItems.Items[0] as TJSONObject;
-    content := joItem.GetValue(JSON_CONTENT).Value;
 
-    if initExam = '1' then
-      root := joItem.GetValue(JSON_SUBROOT).Value
-    else
-      root := joItem.GetValue(JSON_ROOT).Value
-  end;
-  FreeAndNil(OriginalJSONObject);
-end;
+    joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
+    stringGrid.RowCount := joItems.Count + 1;
 
-procedure patientCardView(stringGrid: TAdvStringGrid; cardId, initExam: String);
-var
-  OriginalJSONObject: TJSONObject;
-  joItems: TJSONArray;
-  joItem: TJSONObject;
-
-  JSONString: String;
-  status, content, root, sTooths: String;
-  i: Integer;
-  // a: TArray<String>;
-begin
-  stringGrid.Clear;
-  stringGrid.RowCount := 2;
-
-  with dmDataModule do
-  begin
-
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'cardtree/' + cardId;
-    RESTRequest1.Params.Clear;
-
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-
-    fmMain.logger(LOG_GET + 'cardtree/' + cardId, JSONString);
-
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-    status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
-    if status = STATUS_OK then
+    for i := 0 to joItems.Count - 1 do
     begin
+      joItem := joItems.Items[i] as TJSONObject;
 
-      joItems := OriginalJSONObject.GetValue(JSON_RESPONSE) as TJSONArray;
-      stringGrid.RowCount := joItems.Count + 1;
+      if initExam = '1' then
+        stringGrid.Cells[GRID_CARD_ROOTNODE, i + 1] := joItem.GetValue(JSON_SUBROOT).Value
+      else
+        stringGrid.Cells[GRID_CARD_ROOTNODE, i + 1] := joItem.GetValue(JSON_ROOT).Value;
 
-      for i := 0 to joItems.Count - 1 do
+      stringGrid.Cells[GRID_CARD_CONTENT, i + 1] := joItem.GetValue(JSON_CONTENT).Value;
+      if joItem.GetValue(JSON_TOOTH).Value <> '' then
       begin
-        joItem := joItems.Items[i] as TJSONObject;
-
-        treeContent(joItem.GetValue(JSON_TREE_ID).Value, initExam, content, root);
-
-        stringGrid.Cells[GRID_CARD_ROOTNODE, i + 1] := root;
-        stringGrid.Cells[GRID_CARD_CONTENT, i + 1] := content;
-
-        if joItem.GetValue(JSON_TOOTH).Value <> '' then
-        begin
-          stringGrid.Cells[GRID_CARD_TOOTH, i + 1] := joItem.GetValue(JSON_TOOTH).Value;
-          fmMain.aaaToothButtonCheck(joItem.GetValue(JSON_TOOTH).Value);
-        end;
-
-        stringGrid.Cells[GRID_CARD_CARD_ID, i + 1] := joItem.GetValue(JSON_CARD_ID).Value;
-        stringGrid.Cells[GRID_CARD_TREE_ID, i + 1] := joItem.GetValue(JSON_TREE_ID).Value;
-        stringGrid.Cells[GRID_CARD_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
+        stringGrid.Cells[GRID_CARD_TOOTH, i + 1] := joItem.GetValue(JSON_TOOTH).Value;
+        fmMain.aaaToothButtonCheck(joItem.GetValue(JSON_TOOTH).Value);
       end;
 
+      // stringGrid.Cells[GRID_CARD_CARD_ID, i + 1] := joItem.GetValue(JSON_CARD_ID).Value;
+      stringGrid.Cells[GRID_CARD_TREE_ID, i + 1] := joItem.GetValue(JSON_TREE_ID).Value;
+      stringGrid.Cells[GRID_CARD_ID, i + 1] := joItem.GetValue(JSON_ID).Value;
     end;
-    FreeAndNil(OriginalJSONObject);
-    // FreeAndNil(joItem);
+
   end;
+  FreeAndNil(OriginalJSONObject);
+  // FreeAndNil(joItem);
 
 end;
 
@@ -732,17 +868,10 @@ var
   status: String;
   i: Integer;
 begin
-  stringGrid.BeginUpdate;
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'patient';
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
+  JSONString := RESTRequest(rmGET, 'patient');
+  OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
 
+  stringGrid.BeginUpdate;
   status := OriginalJSONObject.GetValue(JSON_STATUS).Value;
   if status = STATUS_OK then
   begin
@@ -796,15 +925,9 @@ var
   status: String;
   i: Integer;
 begin
-  with dmDataModule do
-  begin
-    RESTRequest1.Method := rmGET;
-    RESTRequest1.Resource := 'employee';
-    RESTRequest1.Params.Clear;
-    RESTRequest1.Execute;
-    JSONString := RESTResponse1.JSONValue.ToString;
-    OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-  end;
+  JSONString := RESTRequest(rmGET, 'employee');
+  OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
+
   gridEmployee.Clear;
   comboEmployee.Clear;
   comboEmployeeOrign.Clear;
@@ -861,7 +984,7 @@ end;
 // false изменить запись
 procedure employeeModify(style: Boolean; AName: String; isEnable: Boolean; id: String);
 var
-  OriginalJSONObject: TJSONObject;
+  // OriginalJSONObject: TJSONObject;
   // joItems: TJSONArray;
   // joItem: TJSONObject;
 
@@ -911,6 +1034,166 @@ begin
       JSONString := RESTResponse1.JSONValue.ToString;
       // OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
     end
+end;
+
+{ рекрусивная процедура проходится по нашим шаблоном и ищем измененные и добавленные
+  узлы, храним их в локальной бд }
+procedure treeSearchModifyNode(ANode: TAdvTreeViewNode);
+begin
+  while ANode <> nil do
+    with dmDataModule do
+    begin
+      if ANode.Text[TREE_NODE_NEW_PARENT_ID] <> '' then
+      begin
+        localExecSQL.SQL.Clear;
+        localExecSQL.SQL.Add(SQL_INSERT_TREE);
+        if ANode.Text[TREE_NODE_ENABLE] = TEXT_ACTIVE then
+          localExecSQL.SQL.Add(Format('(null, null, %s, "%s", 0, 1, "%s");',
+            [ANode.Text[TREE_NODE_NEW_PARENT_ID], ANode.Text[TREE_NODE_CONTENT],
+            SQL_MEDOT_POST]))
+        else
+          localExecSQL.SQL.Add(Format('(null, null, %s, "%s", 0, 0, "%s");',
+            [ANode.Text[TREE_NODE_NEW_PARENT_ID], ANode.Text[TREE_NODE_CONTENT],
+            SQL_MEDOT_POST]));
+        // fmMain.Caption:= localExecSQL.SQL.Text;
+        localExecSQL.ExecSQL;
+        ANode.Text[TREE_NODE_NEW_PARENT_ID] := '';
+      end;
+      // собираем данные обновленных узлов
+      if ANode.Text[TREE_NODE_MODIFY_ID] <> '' then
+      begin
+        localExecSQL.SQL.Clear;
+        localExecSQL.SQL.Add(SQL_INSERT_TREE);
+        if ANode.Text[TREE_NODE_ENABLE] = TEXT_ACTIVE then
+          localExecSQL.SQL.Add(Format('(null, %s, null, "%s", 0, 1, "%s");',
+            [ANode.Text[TREE_NODE_MODIFY_ID], ANode.Text[TREE_NODE_CONTENT],
+            SQL_MEDOT_PUT]))
+        else
+          localExecSQL.SQL.Add(Format('(null, %s, null, "%s", 0, 0, "%s");',
+            [ANode.Text[TREE_NODE_MODIFY_ID], ANode.Text[TREE_NODE_CONTENT],
+            SQL_MEDOT_PUT]));
+
+        localExecSQL.ExecSQL;
+        ANode.Text[TREE_NODE_MODIFY_ID] := '';
+      end;
+
+      if ANode.GetChildCount > 0 then
+        treeSearchModifyNode(ANode.GetFirstChild);
+
+      // if ANode. then
+
+      ANode := ANode.GetNext;
+    end;
+
+end;
+
+procedure treeNodeSave(PNode: TAdvTreeViewNode);
+var
+  i, Count: Integer;
+  // RequestParams: TRESTRequestParameterList;
+
+  JSONString, s: String;
+
+  // UnicodeStr: UnicodeString;
+  // UTF8Str: RawByteString;
+
+  UTF8Str: AnsiString;
+  UnicodeStr: WideString;
+  TempString: RawByteString;
+  ResultString: WideString;
+begin
+  with dmDataModule do
+  begin
+    if LocalDB.Connected = false then
+      LocalDB.Connected := true;
+
+    localTree.Close;
+    localDropTableTree.ExecSQL;
+    localCreateTableTree.ExecSQL;
+    // собираем данные добавленных/измененных узлов
+    treeSearchModifyNode(PNode);
+
+    localTree.SQL.Clear;
+    localTree.SQL.Add(SQL_SELECT_TREE_WHERE + '''' + SQL_MEDOT_POST + '''');
+    localTree.Open;
+
+    // возможна ошибка
+    localTree.Last;
+    Count := localTree.RecordCount;
+    localTree.First;
+    // RequestParams := TRESTRequestParameterList.Create(fmMain);
+    { for i := 0 to Count - 1 do
+      begin
+
+      RequestParams.Clear;
+      s := IntToStr(localTreeparent_id.Value);
+      RequestParams.AddItem(JSON_PARENT_ID, UTF8EncodeToShortString(s), pkGETorPOST,
+      [poDoNotEncode]);
+      s := localTreecontent.Value;
+      RequestParams.AddItem(JSON_CONTENT, UTF8EncodeToShortString(s), pkGETorPOST,
+      [poDoNotEncode]);
+      s := IntToStr(localTreeis_enable.Value);
+      RequestParams.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString(s), pkGETorPOST,
+      [poDoNotEncode]);
+      JSONString := RESTRequest(rmPOST, 'tree', RequestParams);
+      localTree.Next;
+      end; }
+
+    localTree.Close;
+    localTree.SQL.Clear;
+    localTree.SQL.Add(SQL_SELECT_TREE_WHERE + '''' + SQL_MEDOT_PUT + '''');
+    localTree.Open;
+
+    // возможна ошибка
+    localTree.Last;
+    Count := localTree.RecordCount;
+    localTree.First;
+
+    for i := 0 to Count - 1 do
+    begin
+      RESTRequest2.Params.Clear;
+      s := localTreecontent.Value;
+      // UTF8Str := UTF8Encode(s);
+      // SetCodePage(UTF8Str, 0, false);
+      // UnicodeStr := UTF8Str;
+
+      UnicodeStr := s;
+      TempString := UTF8Encode(UnicodeStr);
+      SetLength(UTF8Str, Length(TempString));
+      Move(TempString[1], UTF8Str[1], Length(UTF8Str));
+      ResultString := UTF8Str;
+
+      RESTRequest2.Params.AddItem(JSON_CONTENT, ResultString, pkGETorPOST,
+        [poDoNotEncode]);
+      RESTRequest2.Params.AddItem(JSON_IS_ENABLE,
+        UTF8EncodeToShortString(IntToStr(localTreeis_enable.Value)), pkGETorPOST,
+        [poDoNotEncode]);
+      JSONString := RESTRequest(rmPUT, 'tree/' + IntToStr(localTreeupdate_id.Value),
+        RESTRequest2.Params);
+      localTree.Next;
+
+      { RequestParams.Clear;
+        s := localTreecontent.Value;
+        // UTF8Str := UTF8Encode(s);
+        // SetCodePage(UTF8Str, 0, false);
+        // UnicodeStr := UTF8Str;
+
+        UnicodeStr := s;
+        TempString := UTF8Encode(UnicodeStr);
+        SetLength(UTF8Str, Length(TempString));
+        Move(TempString[1], UTF8Str[1], Length(UTF8Str));
+        ResultString := UTF8Str;
+
+        RequestParams.AddItem(JSON_CONTENT, ResultString, pkGETorPOST, [poDoNotEncode]);
+        RequestParams.AddItem(JSON_IS_ENABLE,
+        UTF8EncodeToShortString(IntToStr(localTreeis_enable.Value)), pkGETorPOST,
+        [poDoNotEncode]);
+        JSONString := RESTRequest(rmPUT, 'tree/' + IntToStr(localTreeupdate_id.Value),
+        RequestParams);
+        localTree.Next; }
+    end;
+    // RequestParams.Free;
+  end;
 end;
 
 end.

@@ -3,13 +3,19 @@ unit uDataModule;
 interface
 
 uses
-  System.SysUtils, System.Classes, IPPeerClient, REST.Client,
-  Data.Bind.Components, Data.Bind.ObjectScope,
+  System.SysUtils, System.Classes, IPPeerClient, REST.Client, REST.Types,
+  Data.Bind.Components,
   System.ImageList,
   Vcl.ImgList,
   Vcl.Controls,
   uContent,
-  frxClass;
+  frxClass, FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Error,
+  FireDAC.UI.Intf, FireDAC.Phys.Intf, FireDAC.Stan.Def, FireDAC.Stan.Pool,
+  FireDAC.Stan.Async, FireDAC.Phys, FireDAC.Phys.SQLite, FireDAC.Phys.SQLiteDef,
+  FireDAC.Stan.ExprFuncs, FireDAC.Stan.Param, FireDAC.DatS, FireDAC.DApt.Intf,
+  FireDAC.DApt, Data.DB, FireDAC.Comp.DataSet, FireDAC.Comp.Client,
+  FireDAC.VCLUI.Wait, FireDAC.Comp.UI, frxDBSet, frxExportPDF,
+  Data.Bind.ObjectScope;
 
 type
   TdmDataModule = class(TDataModule)
@@ -17,33 +23,50 @@ type
     RESTRequest1: TRESTRequest;
     RESTResponse1: TRESTResponse;
     imagesButton: TImageList;
-    frxPatientPISZ: TfrxUserDataSet;
     frxPatientInfo: TfrxUserDataSet;
     frxPatientCard: TfrxReport;
-    frxPatientDiagnosis: TfrxUserDataSet;
-    frxPatientZhaloby: TfrxUserDataSet;
-    frxUserDataSet1: TfrxUserDataSet;
-    frxCardList: TfrxUserDataSet;
-    frxTree: TfrxUserDataSet;
+    LocalDB: TFDConnection;
+    localDropTableCard: TFDQuery;
+    localCreateTableCard: TFDQuery;
+    localExecSQL: TFDQuery;
+    FDGUIxWaitCursor: TFDGUIxWaitCursor;
+    localCard: TFDQuery;
+    localCardDetails: TFDQuery;
+    localCardid: TIntegerField;
+    localCardname: TWideStringField;
+    localCardcreated: TDateTimeField;
+    localCardDetailsid: TIntegerField;
+    localCardDetailscard_id: TIntegerField;
+    localCardDetailstooth: TWideStringField;
+    localCardDetailscontent: TWideStringField;
+    localCardDetailsroot: TWideStringField;
+    frxDBCard: TfrxDBDataset;
+    frxDBCardDetails: TfrxDBDataset;
+    frxReport1: TfrxReport;
+    dsCard: TDataSource;
+    localCardTitle: TFDQuery;
+    frxDBCardTitle: TfrxDBDataset;
+    localCardTitleid: TIntegerField;
+    localCardTitlecontent: TWideStringField;
+    localCardTitlesubroot_id: TIntegerField;
+    localCardTitlesubroot: TWideStringField;
+    frxPDFExport1: TfrxPDFExport;
+    localCreateTableTree: TFDQuery;
+    localDropTableTree: TFDQuery;
+    localTree: TFDQuery;
+    localTreeid: TFDAutoIncField;
+    localTreeupdate_id: TIntegerField;
+    localTreeparent_id: TIntegerField;
+    localTreecontent: TWideStringField;
+    localTreeis_init_exam: TShortintField;
+    localTreeis_enable: TShortintField;
+    localTreemetod: TWideStringField;
+    RESTRequest2: TRESTRequest;
     procedure RESTRequest1AfterExecute(Sender: TCustomRESTRequest);
     procedure frxPatientInfoGetValue(const VarName: string; var Value: Variant);
-    procedure frxPatientDiagnosisGetValue(const VarName: string; var Value: Variant);
-    procedure frxPatientDiagnosisNext(Sender: TObject);
-    procedure frxPatientDiagnosisFirst(Sender: TObject);
-    procedure frxPatientDiagnosisCheckEOF(Sender: TObject; var Eof: Boolean);
-    procedure frxPatientZhalobyCheckEOF(Sender: TObject; var Eof: Boolean);
-    procedure frxPatientZhalobyFirst(Sender: TObject);
-    procedure frxPatientZhalobyGetValue(const VarName: string; var Value: Variant);
-    procedure frxPatientZhalobyNext(Sender: TObject);
-    procedure frxPatientPISZCheckEOF(Sender: TObject; var Eof: Boolean);
-    procedure frxPatientPISZFirst(Sender: TObject);
-    procedure frxPatientPISZGetValue(const VarName: string; var Value: Variant);
-    procedure frxPatientPISZNext(Sender: TObject);
-    procedure frxUserDataSet1CheckEOF(Sender: TObject; var Eof: Boolean);
-    procedure frxUserDataSet1First(Sender: TObject);
-    procedure frxUserDataSet1GetValue(const VarName: string;
-      var Value: Variant);
-    procedure frxUserDataSet1Next(Sender: TObject);
+    procedure frxCardListCheckEOF(Sender: TObject; var Eof: Boolean);
+    procedure LocalDBAfterConnect(Sender: TObject);
+    procedure LocalDBBeforeConnect(Sender: TObject);
 
   private
     { Private declarations }
@@ -60,34 +83,14 @@ implementation
 
 uses uMain;
 
-var
-  intD, intZ, intP, intR: SmallInt;
-
 {$R *.dfm}
 
-procedure TdmDataModule.frxPatientDiagnosisCheckEOF(Sender: TObject; var Eof: Boolean);
+procedure TdmDataModule.frxCardListCheckEOF(Sender: TObject; var Eof: Boolean);
 begin
-  if intD = arrayDiagnosis.Count then
+  {if intCL = ACardList.Count then
     Eof := true
   else
-    Eof := false;
-end;
-
-procedure TdmDataModule.frxPatientDiagnosisFirst(Sender: TObject);
-begin
-  intD := 0;
-end;
-
-procedure TdmDataModule.frxPatientDiagnosisGetValue(const VarName: string;
-  var Value: Variant);
-begin
-  if VarName = 'content' then
-    Value := arrayDiagnosis[intD];
-end;
-
-procedure TdmDataModule.frxPatientDiagnosisNext(Sender: TObject);
-begin
-  Inc(intD);
+    Eof := false;}
 end;
 
 procedure TdmDataModule.frxPatientInfoGetValue(const VarName: string; var Value: Variant);
@@ -111,84 +114,19 @@ begin
   end;
 end;
 
-procedure TdmDataModule.frxPatientPISZCheckEOF(Sender: TObject; var Eof: Boolean);
+procedure TdmDataModule.LocalDBAfterConnect(Sender: TObject);
 begin
-  if intP = arrayPISZ.Count then
-    Eof := true
-  else
-    Eof := false;
+  fmMain.logger(rmPATCH,'Локальная БД','Подключено');
 end;
 
-procedure TdmDataModule.frxPatientPISZFirst(Sender: TObject);
+procedure TdmDataModule.LocalDBBeforeConnect(Sender: TObject);
 begin
-  intP := 0;
-end;
-
-procedure TdmDataModule.frxPatientPISZGetValue(const VarName: string; var Value: Variant);
-begin
-  if VarName = 'content' then
-    Value := arrayPISZ[intP];
-end;
-
-procedure TdmDataModule.frxPatientPISZNext(Sender: TObject);
-begin
-  Inc(intP);
-end;
-
-procedure TdmDataModule.frxPatientZhalobyCheckEOF(Sender: TObject; var Eof: Boolean);
-begin
-  if intZ = arrayZhaloby.Count then
-    Eof := true
-  else
-    Eof := false;
-end;
-
-procedure TdmDataModule.frxPatientZhalobyFirst(Sender: TObject);
-begin
-  intZ := 0;
-end;
-
-procedure TdmDataModule.frxPatientZhalobyGetValue(const VarName: string;
-  var Value: Variant);
-begin
-  if VarName = 'content' then
-    Value := arrayZhaloby[intZ];
-end;
-
-procedure TdmDataModule.frxPatientZhalobyNext(Sender: TObject);
-begin
-  Inc(intZ);
-end;
-
-procedure TdmDataModule.frxUserDataSet1CheckEOF(Sender: TObject;
-  var Eof: Boolean);
-begin
-  if intR = arrayRNZ.Count then
-    Eof := true
-  else
-    Eof := false;
-end;
-
-procedure TdmDataModule.frxUserDataSet1First(Sender: TObject);
-begin
-  intR:= 0;
-end;
-
-procedure TdmDataModule.frxUserDataSet1GetValue(const VarName: string;
-  var Value: Variant);
-begin
-  if VarName = 'field' then
-    Value := arrayRNZ[intR];
-end;
-
-procedure TdmDataModule.frxUserDataSet1Next(Sender: TObject);
-begin
-  Inc(intR);
+  fmMain.logger(rmPATCH,'Локальная БД','Подключение...');
 end;
 
 procedure TdmDataModule.RESTRequest1AfterExecute(Sender: TCustomRESTRequest);
 begin
-  fmMain.logger(RESTRequest1.Resource, 'ok');
+  //fmMain.logger(RESTRequest1.Method, RESTRequest1.Resource, 'ok');
 end;
 
 end.

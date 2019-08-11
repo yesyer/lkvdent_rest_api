@@ -1,5 +1,8 @@
 { константы в таблице tb_tree, особенно важно дл€ id 6-10
 
+
+
+
   id, parent_id, content, is_init_exam, is_enable
 
   1 	NULL 	∆алобы 	                                  0 	1
@@ -34,10 +37,12 @@ uses
   Vcl.Graphics,
   Vcl.Mask,
   System.Types,
+
   uContent,
 
   System.JSON,
   REST.Types,
+  REST.Client,
 
   AdvGlassButton,
   AdvUtil,
@@ -53,7 +58,8 @@ uses
   Vcl.Menus,
   AdvMenus,
   AdvDateTimePicker,
-  AdvGlowButton, AdvSplitter, ColListb;
+  AdvGlowButton,
+  ColListb;
 
 type
   TfmMain = class(TForm)
@@ -86,7 +92,7 @@ type
     buttonNodeInsert: TAdvGlassButton;
     plPatient: TPanel;
     buttonPatient: TAdvGlassButton;
-    plPatientInsert: TPanel;
+    plPatientModifed: TPanel;
     gridPatient: TAdvStringGrid;
     editFName: TButtonedEdit;
     GroupBox1: TGroupBox;
@@ -155,21 +161,26 @@ type
     comboEmployeeID: TComboBox;
     comboEmployeeOrign: TComboBox;
     buttonPrint: TAdvGlassButton;
+    plLoading: TPanel;
+    ProgressBar1: TProgressBar;
+    Panel3: TPanel;
+    buttonClear: TAdvGlassButton;
+    buttonFilterClear: TAdvGlassButton;
+    Memo1: TMemo;
     procedure tabEmployeeShow(Sender: TObject);
     procedure tabTreeShow(Sender: TObject);
     procedure treeNodeRootSettingAfterSelectNode(Sender: TObject;
       ANode: TAdvTreeViewVirtualNode);
 
-    procedure aaaSearchModifyNode(PNode: TAdvTreeViewNode);
     function aaaIsEmptyText(s, msg: String): Boolean;
     procedure aaaModifyStyle(s: ShortInt);
     procedure aaaPatientFieldClear;
-    procedure aaaPatientFilter(FilterStr: String; FCol: SmallInt);
+    procedure aaaPatientFilter;
     procedure aaaToothButtonCheck(ATooth: String);
     procedure aaaToothButtonUncheck(ARow: Integer);
     procedure aaaToothButtonUncheckAll;
     procedure aaaToothButtonsSet;
-    procedure logger(metod, text: String);
+    procedure logger(metod: TRESTRequestMethod; text, response: String);
 
     procedure treeNodeSettingMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -205,17 +216,26 @@ type
     procedure gridCardDblClickCell(Sender: TObject; ARow, ACol: Integer);
     procedure FormShow(Sender: TObject);
     procedure buttonPatientCardSaveClick(Sender: TObject);
-    procedure loggerLostBoxClick(Sender: TObject);
     procedure buttonPatientCardModifyClick(Sender: TObject);
     procedure comboEmployeeChange(Sender: TObject);
     procedure buttonCloseClick(Sender: TObject);
     procedure buttonPrintClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure buttonClearClick(Sender: TObject);
+    procedure gridPatientDblClickCell(Sender: TObject; ARow, ACol: Integer);
+    procedure editNameChange(Sender: TObject);
+    procedure editNameRightButtonClick(Sender: TObject);
+    procedure editLNameRightButtonClick(Sender: TObject);
+    procedure editProffRightButtonClick(Sender: TObject);
+    procedure buttonFilterClearClick(Sender: TObject);
+    procedure editAddress1RightButtonClick(Sender: TObject);
+    procedure editAddress2RightButtonClick(Sender: TObject);
+    procedure editAddress3RightButtonClick(Sender: TObject);
   private
     { Private declarations }
-    insertParentId, insertContent, insertInitExam, insertEnable: TStrings;
-    updateNodeId, updateContent, updateInitExam, updateEnable: TStrings;
+    // insertParentId, insertContent, insertInitExam, insertEnable: TStrings;
+    // updateNodeId, updateContent, updateInitExam, updateEnable: TStrings;
   public
     { Public declarations }
   end;
@@ -223,9 +243,10 @@ type
 var
   fmMain: TfmMain;
   glModifyNode: TAdvTreeViewVirtualNode; // сохран€ем нод
-
-  arrayDiagnosis, arrayZhaloby, arrayPISZ, arrayRNZ: TStrings;
-  arrayCardTreeDelete: TStrings;
+  glFlagInsertCard: Boolean; // флаг, добавить/редактировть карточку true/false
+  // ADiagnosis, AZhaloby, APISZ, ARNZ: TStrings;
+  ACardTreeDelete: TStrings;
+  // ACardList, ACardTree: TStrings;
 
   // glModifyClient: Boolean; // true - append, false - modify
 implementation
@@ -235,14 +256,25 @@ implementation
 uses
   uDataModule, uModifyNode;
 
-procedure TfmMain.logger(metod, text: String);
+procedure TfmMain.logger(metod: TRESTRequestMethod; text, response: String);
 begin
   with loggerLostBox.ListBoxItems.Add do
   begin
-    // ImageIndex:=random(2);
     Strings.Add(DateTimeToStr(now));
-    Strings.Add(metod);
+    case metod of
+      rmGET:
+        Strings.Add('GET');
+      rmPOST:
+        Strings.Add('POST');
+      rmPUT:
+        Strings.Add('PUT');
+      rmDELETE:
+        Strings.Add('DELETE');
+      rmPATCH:
+        Strings.Add('(нет)');
+    end;
     Strings.Add(text);
+    Strings.Add(response);
   end;
 end;
 
@@ -255,57 +287,6 @@ begin
   end
   else
     Result := false;
-end;
-
-// рекрусивна€ процедура проходитс€ по нашим шабланом и ищем измененные и добавленные
-// узлы, храним их в глобальных переменных
-procedure TfmMain.aaaSearchModifyNode(PNode: TAdvTreeViewNode);
-begin
-  while PNode <> nil do
-  begin
-    // собираем данные добавленных узлов
-    if PNode.text[TREE_NODE_NEW_PARENT_ID] <> '' then
-    begin
-      insertParentId.Add(PNode.text[TREE_NODE_NEW_PARENT_ID]);
-      insertContent.Add(PNode.text[TREE_NODE_CONTENT]);
-
-      if PNode.text[TREE_NODE_INIT_EXAM] = TEXT_YES then
-        insertInitExam.Add('1')
-      else
-        insertInitExam.Add('0');
-
-      if PNode.text[TREE_NODE_ENABLE] = TEXT_ACTIVE then
-        insertEnable.Add('1')
-      else
-        insertEnable.Add('0');
-
-      PNode.text[TREE_NODE_NEW_PARENT_ID] := '';
-    end;
-    // собираем данные обновленных узлов
-    if PNode.text[TREE_NODE_MODIFY_ID] <> '' then
-    begin
-      updateNodeId.Add(PNode.text[TREE_NODE_MODIFY_ID]);
-      updateContent.Add(PNode.text[TREE_NODE_CONTENT]);
-
-      if PNode.text[TREE_NODE_INIT_EXAM] = TEXT_YES then
-        updateInitExam.Add('1')
-      else
-        updateInitExam.Add('0');
-
-      if PNode.text[TREE_NODE_ENABLE] = TEXT_ACTIVE then
-        updateEnable.Add('1')
-      else
-        updateEnable.Add('0');
-
-      PNode.text[TREE_NODE_MODIFY_ID] := '';
-    end;
-
-    if PNode.GetChildCount > 0 then
-      aaaSearchModifyNode(PNode.GetFirstChild);
-
-    PNode := PNode.GetNext;
-  end;
-
 end;
 
 // 1: ƒобавить сотрудниа
@@ -322,6 +303,7 @@ begin
       Caption := 'ƒобавление сотрудника';
       labelText.Caption := TEXT_NAME_EMPLOYEE;
       editField.Clear;
+      editField.MaxLength := MAX_LENGHT_EMPLOYEE_NAME;
       checkEnable.Checked := true;
       checkInitExam.Visible := false;
     end;
@@ -335,6 +317,7 @@ begin
       Caption := 'ƒобавить шаблон';
       labelText.Caption := TEXT_NAME_TEMPLATE;
       editField.Clear;
+      editField.MaxLength := MAX_LENGHT_TREE_CONTENT;
       checkEnable.Checked := true;
       checkInitExam.Checked := false;
       checkInitExam.Visible := true;
@@ -363,28 +346,33 @@ begin
   memoNotes.Lines.Clear;
 end;
 
-procedure TfmMain.aaaPatientFilter(FilterStr: String; FCol: SmallInt);
+procedure TfmMain.aaaPatientFilter;
 begin
   gridPatient.FilterActive := false;
   gridPatient.Filter.Clear;
-
   with gridPatient.Filter.Add do
   begin
-    Condition := FilterStr;
-    Column := FCol;
+    Condition := editFName.text + '*';
+    Column := GRID_PATIENT_FNAME;
     Operation := foNone;
   end;
 
-  gridPatient.FilterActive := true;
-  if (gridPatient.VisibleRowCount = 1) and
-    (gridPatient.Cells[FCol, 1] = gridPatient.ColumnHeaders[1]) then
-    gridPatient.FilterActive := false;
+  with gridPatient.Filter.Add do
+  begin
+    Condition := editName.text + '*';
+    Column := GRID_PATIENT_NAME;
+    Operation := foAND;
+  end;
 
+  gridPatient.FilterActive := true;
+
+  if gridPatient.RowSelect[1] = false then
+    gridPatient.FilterActive := false;
 end;
 
 procedure TfmMain.aaaToothButtonCheck(ATooth: String);
 var
-  i, j, b: Integer;
+  b: Integer;
   sTooth, sTooths: String;
 begin
   // запоминаем строку ввида 48:47:46:
@@ -504,7 +492,7 @@ const
   CONST_LEFT = 8;
   CONST_WIDTH = 38 + 4;
 var
-  i, Left, blGlyph: Integer;
+  i, Left: Integer;
 begin
   Left := CONST_LEFT;
   for i := 18 downto 11 do
@@ -542,12 +530,13 @@ begin
   begin
     MessageDlg('¬ыберите строку дл€ редактировани€', mtInformation, [mbOK], 0);
     if buttonPatientInsert.Down = false then
-      plPatientInsert.Visible := false;
+      plPatientModifed.Visible := false;
     buttonPatientModify.Down := false;
     Exit;
   end;
 
-  plPatientInsert.Visible := buttonPatientModify.Down;
+  plPatientModifed.Visible := buttonPatientModify.Down;
+
   if buttonPatientInsert.Down = true then
     buttonPatientInsert.Down := false;
 
@@ -589,6 +578,9 @@ begin
   editPhone1.text := gridPatient.Cells[GRID_PATIENT_PHONE1, gridPatient.SelectedRow[0]];
   editPhone2.text := gridPatient.Cells[GRID_PATIENT_PHONE2, gridPatient.SelectedRow[0]];
   memoNotes.Lines.Add(gridPatient.Cells[GRID_PATIENT_NOTES, gridPatient.SelectedRow[0]]);
+
+  if gridPatient.FilterActive = true then
+    gridPatient.FilterActive := false;
 end;
 
 procedure TfmMain.buttonPatientSaveClick(Sender: TObject);
@@ -607,6 +599,9 @@ begin
       [mbOK], 0);
     Exit;
   end;
+
+  if gridPatient.FilterActive = true then
+    gridPatient.FilterActive := false;
 
   with dmDataModule do
   begin
@@ -725,7 +720,7 @@ begin
       ShowMessage('—охранение прошло успешно');
       buttonPatientInsert.Down := false;
       buttonPatientModify.Down := false;
-      plPatientInsert.Visible := false;
+      plPatientModifed.Visible := false;
       patientRefresh(gridPatient);
     end
     else
@@ -738,35 +733,14 @@ end;
 
 procedure TfmMain.buttonPrintClick(Sender: TObject);
 begin
-  arrayDiagnosis := TStringList.Create;
-  arrayZhaloby := TStringList.Create;
-  arrayPISZ := TStringList.Create;
-  arrayRNZ := TStringList.Create;
+  fieldsPatientReport(gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]]);
 
-  with dmDataModule do
-  begin
-
-    fieldsPatientTitle(gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]],
-      arrayDiagnosis, arrayZhaloby, arrayPISZ, arrayRNZ);
-
-    frxPatientDiagnosis.RangeEndCount := arrayDiagnosis.Count;
-    frxPatientZhaloby.RangeEndCount := arrayZhaloby.Count;
-    frxPatientPISZ.RangeEndCount := arrayPISZ.Count;
-    // frxPatientRNZ.RangeEndCount:=arrayRNZ.Count;
-
-    frxPatientCard.ShowReport;
-    fmMain.Caption := IntToStr(arrayRNZ.Count);
-  end;
-
-  arrayDiagnosis.Free;
-  arrayZhaloby.Free;
-  arrayPISZ.Free;
-  arrayRNZ.Free;
+  dmDataModule.frxPatientCard.ShowReport;
 end;
 
 procedure TfmMain.buttonPatientInsertClick(Sender: TObject);
 begin
-  plPatientInsert.Visible := buttonPatientInsert.Down;
+  plPatientModifed.Visible := buttonPatientInsert.Down;
   if buttonPatientModify.Down = true then
     buttonPatientModify.Down := false;
   buttonPatientSave.Caption := 'ƒобавить';
@@ -789,8 +763,9 @@ begin
   plPatient.Visible := false;
   plSettings.Visible := false;
   plPatientCardList.Visible := true;
+  Application.ProcessMessages;
   // s := gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]];
-  logger('patient_id', gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]]);
+  // logger('patient_id', gridPatient.Cells[GRID_PATIENT_ID, gridPatient.SelectedRow[0]]);
   patientCard(gridCardList, gridPatient.Cells[GRID_PATIENT_ID,
     gridPatient.SelectedRow[0]]);
 
@@ -827,7 +802,7 @@ begin
   begin
     Exit;
   end;
-
+  glFlagInsertCard := false;
   if gridCardList.SelectedRow[0] = 1 then
     treeNodeRootContent(treeNodeRootCard, '1')
   else
@@ -872,8 +847,7 @@ begin
   labelName.Caption := gridCardList.Cells[GRID_CARD_LIST_NAME,
     gridCardList.SelectedRow[0]];
 
-
-  arrayCardTreeDelete.Clear;
+  ACardTreeDelete.Clear;
 
   plSettings.Visible := false;
   plPatient.Visible := false;
@@ -884,9 +858,15 @@ end;
 procedure TfmMain.buttonPatientCardSaveClick(Sender: TObject);
 begin
   { TODO верефикаци€, сохранить карточку, сохранить изменени€ карточки }
-  if gridCardList.Cells[GRID_CARD_LIST_ID, gridPatient.SelectedRow[0]] = '' then
-    patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
-      gridPatient.SelectedRow[0]], comboEmployeeID.text, '1')
+  // if gridCardList.Cells[GRID_CARD_LIST_ID, gridPatient.SelectedRow[0]] = '' then
+  if glFlagInsertCard = true then
+    if gridCardList.Cells[GRID_CARD_LIST_ID, gridPatient.SelectedRow[0]] = '' then
+      patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
+        gridPatient.SelectedRow[0]], comboEmployeeID.text, '1')
+    else
+      // bug не сохран€ет первую запись
+      patientCardInsertSave(gridCard, gridPatient.Cells[GRID_PATIENT_ID,
+        gridPatient.SelectedRow[0]], comboEmployeeID.text, '0')
   else if comboEmployee.ItemIndex <> comboEmployeeOrign.ItemIndex then
     patientCardModifySave(gridCard, comboEmployeeID.text,
       gridCardList.Cells[GRID_CARD_LIST_ID, gridCardList.SelectedRow[0]])
@@ -901,6 +881,11 @@ begin
   plPatient.Visible := false;
   plPatientCardList.Visible := true;
   plPatientCardModify.Visible := false;
+end;
+
+procedure TfmMain.buttonClearClick(Sender: TObject);
+begin
+  loggerLostBox.ListBoxItems.Clear;
 end;
 
 procedure TfmMain.buttonCloseClick(Sender: TObject);
@@ -953,6 +938,11 @@ begin
   end;
 end;
 
+procedure TfmMain.buttonFilterClearClick(Sender: TObject);
+begin
+  gridPatient.FilterActive := false;
+end;
+
 procedure TfmMain.buttonNodeCancelClick(Sender: TObject);
 begin
   // treeNodeRootSettingAfterSelectNode(Sender, treeNodeRootSetting.SelectedVirtualNode);
@@ -976,10 +966,10 @@ begin
               CNode := treeNodeSetting.AddNode(glModifyNode.Node);
               CNode.text[TREE_NODE_CONTENT] := editField.text;
 
-              if checkInitExam.Checked then
+              { if checkInitExam.Checked then
                 CNode.text[TREE_NODE_INIT_EXAM] := TEXT_YES
-              else
-                CNode.text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
+                else
+                CNode.text[TREE_NODE_INIT_EXAM] := TEXT_NOT; }
 
               if checkEnable.Checked then
                 CNode.text[TREE_NODE_ENABLE] := TEXT_ACTIVE
@@ -1003,92 +993,17 @@ end;
 
 // TODO успешно/ошибка при сохранении записи
 procedure TfmMain.buttonNodeSaveClick(Sender: TObject);
-var
-  OriginalJSONObject: TJSONObject;
-  JSONString: String;
-
-  i: Integer;
+// var
+// OriginalJSONObject: TJSONObject;
+// JSONString: String;
+// RequestParams: TRESTRequestParameterList;
+// i: Integer;
 begin
   buttonNodeSave.Enabled := false;
-  insertParentId := TStringList.Create;
-  insertContent := TStringList.Create;
-  insertInitExam := TStringList.Create;
-  insertEnable := TStringList.Create;
-
-  updateNodeId := TStringList.Create;
-  updateContent := TStringList.Create;
-  updateInitExam := TStringList.Create;
-  updateEnable := TStringList.Create;
-
-  insertParentId.Clear;
-  insertContent.Clear;
-  insertInitExam.Clear;
-  insertEnable.Clear;
-
-  updateNodeId.Clear;
-  updateContent.Clear;
-  updateInitExam.Clear;
-  updateEnable.Clear;
 
   if treeNodeSetting.Nodes.Items[0] <> nil then
-    aaaSearchModifyNode(treeNodeSetting.Nodes.Items[0]);
+    treeNodeSave(treeNodeSetting.Nodes.Items[0]);
 
-  with dmDataModule do
-  begin
-    // ƒобавление записей
-    for i := 0 to insertParentId.Count - 1 do
-    begin
-      RESTRequest1.Method := rmPOST;
-      RESTRequest1.Resource := 'tree';
-
-      RESTRequest1.Params.Clear;
-      // RESTRequest1.Params.AddHeader('Connection', 'keep-alive');
-      RESTRequest1.Params.AddItem(JSON_PARENT_ID,
-        UTF8EncodeToShortString(insertParentId[i]), pkGETorPOST, [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_CONTENT, UTF8EncodeToShortString(insertContent[i]),
-        pkGETorPOST, [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_IS_INIT_EXAM,
-        UTF8EncodeToShortString(insertInitExam[i]), pkGETorPOST, [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString(insertEnable[i]
-        ), pkGETorPOST, [poDoNotEncode]);
-
-      RESTRequest1.Execute;
-      JSONString := RESTResponse1.JSONValue.ToString;
-    end;
-
-    for i := 0 to updateNodeId.Count - 1 do
-    begin
-      RESTRequest1.Method := rmPUT;
-      RESTRequest1.Resource := 'tree/' + updateNodeId[i];
-
-      RESTRequest1.Params.Clear;
-      // RESTRequest1.Params.AddHeader('Connection', 'keep-alive');
-      RESTRequest1.Params.AddItem(JSON_CONTENT, UTF8EncodeToShortString(updateContent[i]),
-        pkGETorPOST, [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_IS_INIT_EXAM,
-        UTF8EncodeToShortString(updateInitExam[i]), pkGETorPOST, [poDoNotEncode]);
-      RESTRequest1.Params.AddItem(JSON_IS_ENABLE, UTF8EncodeToShortString(updateEnable[i]
-        ), pkGETorPOST, [poDoNotEncode]);
-
-      RESTRequest1.Execute;
-      JSONString := RESTResponse1.JSONValue.ToString;
-    end;
-    // OriginalJSONObject := TJSONObject.ParseJSONValue(JSONString) as TJSONObject;
-    // ShowMessage(JSONString);
-
-  end;
-
-  // error := OriginalJSONObject.GetValue('error') is TJSONTrue;
-  // FreeAndNil(OriginalJSONObject);
-  insertParentId.Free;
-  insertContent.Free;
-  insertInitExam.Free;
-  insertEnable.Free;
-
-  updateNodeId.Free;
-  updateContent.Free;
-  updateInitExam.Free;
-  updateEnable.Free;
   buttonNodeSave.Enabled := true;
   ShowMessage('—охрание завершено');
 end;
@@ -1097,13 +1012,16 @@ procedure TfmMain.buttonPatientCancelClick(Sender: TObject);
 begin
   buttonPatientInsert.Down := false;
   buttonPatientModify.Down := false;
-  plPatientInsert.Visible := false;
+  plPatientModifed.Visible := false;
+  if gridPatient.FilterActive = true then
+    gridPatient.FilterActive := false;
 end;
 
 procedure TfmMain.buttonPatientCardInsertClick(Sender: TObject);
 begin
   // if MessageDlg(MSG_TEXT_INSERT_CARD, mtConfirmation, mbOKCancel, 0) = mrOk then
   // begin
+  glFlagInsertCard := true;
   if (gridCardList.Cells[GRID_CARD_LIST_INITEXAM, gridCardList.SelectedRow[0]] = '') then
     treeNodeRootContent(treeNodeRootCard, '1')
   else
@@ -1131,12 +1049,19 @@ end;
 procedure TfmMain.buttonPatientClick(Sender: TObject);
 begin
   plSettings.Visible := false;
+  gridPatient.FilterActive := false;
   plPatient.Visible := true;
   plPatientCardList.Visible := false;
   plPatientCardModify.Visible := false;
 
-  plPatientInsert.Visible := false;
+  plPatientModifed.Visible := false;
+
+  // plLoading.Visible:=true;
+  // fmMain.Enabled:=false;
+  Application.ProcessMessages;
   patientRefresh(gridPatient);
+  // fmMain.Enabled:=true;
+  // plLoading.Visible:=false;
 end;
 
 procedure TfmMain.buttonSettingsClick(Sender: TObject);
@@ -1152,9 +1077,27 @@ begin
   comboEmployeeID.ItemIndex := comboEmployee.ItemIndex;
 end;
 
+procedure TfmMain.editAddress1RightButtonClick(Sender: TObject);
+begin
+  editAddress1.Clear;
+  editAddress1.SetFocus;
+end;
+
+procedure TfmMain.editAddress2RightButtonClick(Sender: TObject);
+begin
+  editAddress2.Clear;
+  editAddress2.SetFocus;
+end;
+
+procedure TfmMain.editAddress3RightButtonClick(Sender: TObject);
+begin
+  editAddress3.Clear;
+  editAddress3.SetFocus;
+end;
+
 procedure TfmMain.editFNameChange(Sender: TObject);
 begin
-  // aaaPatientFilter(editFName.Text + '*', GRID_PATIENT_FNAME);
+  aaaPatientFilter;
 end;
 
 procedure TfmMain.editFNameRightButtonClick(Sender: TObject);
@@ -1163,19 +1106,58 @@ begin
   editFName.SetFocus;
 end;
 
+procedure TfmMain.editLNameRightButtonClick(Sender: TObject);
+begin
+  editLName.Clear;
+  editLName.SetFocus;
+end;
+
+procedure TfmMain.editNameChange(Sender: TObject);
+begin
+  aaaPatientFilter;
+end;
+
+procedure TfmMain.editNameRightButtonClick(Sender: TObject);
+begin
+  editName.Clear;
+  editName.SetFocus;
+end;
+
+procedure TfmMain.editProffRightButtonClick(Sender: TObject);
+begin
+  editProff.Clear;
+  editProff.SetFocus;
+end;
+
 procedure TfmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  arrayCardTreeDelete.Free;
+  ACardTreeDelete.Free;
 end;
 
 procedure TfmMain.FormCreate(Sender: TObject);
 begin
-  arrayCardTreeDelete := TStringList.Create;
+  ACardTreeDelete := TStringList.Create;
+  treeNodeRootSetting.NodesAppearance.HeightMode := tnhmVariable;
+  treeNodeSetting.NodesAppearance.HeightMode := tnhmVariable;
+
+  treeNodeRootCard.NodesAppearance.HeightMode := tnhmVariable;
+  treeNodeCard.NodesAppearance.HeightMode := tnhmVariable;
+
+  plSettings.Visible := false;
+  //gridPatient.FilterActive := false;
+  plPatient.Visible := true;
+  plPatientCardList.Visible := false;
+  plPatientCardModify.Visible := false;
+
+  plPatientModifed.Visible := false;
+
+  // RequestParams := TRESTRequestParameterList.Create(fmMain);
 end;
 
 procedure TfmMain.FormShow(Sender: TObject);
 begin
   aaaToothButtonsSet;
+  patientRefresh(gridPatient);
 end;
 
 // TODO ƒоделать процедуру редактировани€ сотрудника
@@ -1186,7 +1168,7 @@ begin
     aaaToothButtonUncheck(ARow);
     // 1 - константа, количество удал€емых строк
     if gridCard.Cells[GRID_CARD_ID, ARow] <> '' then
-      arrayCardTreeDelete.Add(gridCard.Cells[GRID_CARD_ID, ARow]);
+      ACardTreeDelete.Add(gridCard.Cells[GRID_CARD_ID, ARow]);
     gridCard.RemoveRows(ARow, 1);
   end;
 end;
@@ -1197,9 +1179,21 @@ begin
   // fmModifyData.ShowModal;
 end;
 
-procedure TfmMain.loggerLostBoxClick(Sender: TObject);
+procedure TfmMain.gridPatientDblClickCell(Sender: TObject; ARow, ACol: Integer);
 begin
-
+  if plPatientModifed.Visible = true then
+    case ACol of
+      GRID_PATIENT_FNAME:
+        editFName.text := gridPatient.Cells[ACol, ARow];
+      GRID_PATIENT_NAME:
+        editName.text := gridPatient.Cells[ACol, ARow];
+      GRID_PATIENT_LNAME:
+        editLName.text := gridPatient.Cells[ACol, ARow];
+      GRID_PATIENT_ADDRESS1:
+        editAddress1.text := gridPatient.Cells[ACol, ARow];
+      GRID_PATIENT_ADDRESS2:
+        editAddress2.text := gridPatient.Cells[ACol, ARow];
+    end;
 end;
 
 // TODO необходимо организовать удаление нода если он неиспользовалс€
@@ -1229,6 +1223,7 @@ begin
     begin
       CNode := treeNodeSetting.AddNode(nil);
       CNode.text[TREE_NODE_CONTENT] := NewString;
+      CNode.text[TREE_NODE_ENABLE] := TEXT_ACTIVE;
       CNode.text[TREE_NODE_ID] := '';
       CNode.text[TREE_NODE_NEW_PARENT_ID] := treeNodeRootSetting.SelectedNode.text
         [TREE_NODE_ROOT_ID];
@@ -1254,7 +1249,7 @@ begin
         begin
           CNode := treeNodeSetting.AddNode(glModifyNode.Node);
           CNode.text[TREE_NODE_CONTENT] := NewString;
-          CNode.text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
+          // CNode.text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
           CNode.text[TREE_NODE_ENABLE] := TEXT_ACTIVE;
           CNode.text[TREE_NODE_ID] := '';
           CNode.text[TREE_NODE_NEW_PARENT_ID] := glModifyNode.Node.text[TREE_NODE_ID];
@@ -1296,7 +1291,8 @@ begin
     fmMain.Caption := DateToStr(dateBirthday.Date, fmt);
 
     aaaToothButtonsSet; }
-  aaaToothButtonUncheckAll;
+  // dmDataModule.LocalDB.Connected:= true;
+
 end;
 
 procedure TfmMain.tabEmployeeShow(Sender: TObject);
@@ -1309,6 +1305,8 @@ procedure TfmMain.tabTreeShow(Sender: TObject);
 begin
   // 2-признак того чтобы вывести ¬—≈ корневые узлы (кроме зарезервированных)
   treeNodeRootContent(treeNodeRootSetting, '2');
+  if treeNodeRootSetting.Nodes[0] <> nil then
+    treeNodeContent(treeNodeSetting, treeNodeRootSetting.Nodes[0], true);
   treeNodeSetting.ColumnsAppearance.StretchColumn := 0;
 end;
 
@@ -1350,10 +1348,10 @@ begin
     aaaModifyStyle(4);
 
     editField.text := ANode.Node.text[TREE_NODE_CONTENT];
-    if ANode.Node.text[TREE_NODE_INIT_EXAM] = TEXT_YES then
+    { if ANode.Node.text[TREE_NODE_INIT_EXAM] = TEXT_YES then
       checkInitExam.Checked := true
-    else
-      checkInitExam.Checked := false;
+      else
+      checkInitExam.Checked := false; }
 
     if ANode.Node.text[TREE_NODE_ENABLE] = TEXT_ACTIVE then
       checkEnable.Checked := true
@@ -1366,10 +1364,10 @@ begin
       begin
         ANode.Node.text[TREE_NODE_CONTENT] := editField.text;
 
-        if checkInitExam.Checked then
+        { if checkInitExam.Checked then
           ANode.Node.text[TREE_NODE_INIT_EXAM] := TEXT_YES
-        else
-          ANode.Node.text[TREE_NODE_INIT_EXAM] := TEXT_NOT;
+          else
+          ANode.Node.text[TREE_NODE_INIT_EXAM] := TEXT_NOT; }
 
         if checkEnable.Checked then
           ANode.Node.text[TREE_NODE_ENABLE] := TEXT_ACTIVE

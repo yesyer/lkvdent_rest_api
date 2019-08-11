@@ -1,15 +1,14 @@
 object dmDataModule: TdmDataModule
   OldCreateOrder = False
-  Height = 397
+  Height = 448
   Width = 799
   object RESTClient1: TRESTClient
     Accept = 'application/json, text/plain; q=0.9, text/html;q=0.8,'
     AcceptCharset = 'UTF-8, *;q=0.8'
-    BaseURL = 'http://localhost/lkvdent/v3/public'
-    ContentType = 'application/x-www-form-urlencoded'
+    BaseURL = 'http://myprojects.h1n.ru/lkvdent/api/public'
     Params = <>
     HandleRedirects = True
-    Left = 40
+    Left = 32
     Top = 8
   end
   object RESTRequest1: TRESTRequest
@@ -19,19 +18,18 @@ object dmDataModule: TdmDataModule
     Response = RESTResponse1
     OnAfterExecute = RESTRequest1AfterExecute
     SynchronizedEvents = False
-    Left = 40
+    Left = 32
     Top = 56
   end
   object RESTResponse1: TRESTResponse
-    ContentType = 'application/json'
-    Left = 40
+    Left = 32
     Top = 104
   end
   object imagesButton: TImageList
-    Left = 38
+    Left = 30
     Top = 152
     Bitmap = {
-      494C0101010008003C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010101000800640010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -170,17 +168,6 @@ object dmDataModule: TdmDataModule
       FFFF000000000000FFFF00000000000000000000000000000000000000000000
       000000000000}
   end
-  object frxPatientPISZ: TfrxUserDataSet
-    UserName = 'frxPatientPISZ'
-    OnCheckEOF = frxPatientPISZCheckEOF
-    OnFirst = frxPatientPISZFirst
-    OnNext = frxPatientPISZNext
-    Fields.Strings = (
-      'content')
-    OnGetValue = frxPatientPISZGetValue
-    Left = 264
-    Top = 152
-  end
   object frxPatientInfo: TfrxUserDataSet
     UserName = 'frxPatientInfo'
     Fields.Strings = (
@@ -190,7 +177,7 @@ object dmDataModule: TdmDataModule
       'address'
       'proff')
     OnGetValue = frxPatientInfoGetValue
-    Left = 264
+    Left = 368
     Top = 8
   end
   object frxPatientCard: TfrxReport
@@ -202,42 +189,30 @@ object dmDataModule: TdmDataModule
     PrintOptions.Printer = 'Default'
     PrintOptions.PrintOnSheet = 0
     ReportOptions.CreateDate = 43664.428399351900000000
-    ReportOptions.LastChange = 43669.725515439800000000
+    ReportOptions.LastChange = 43681.735708148100000000
     ScriptLanguage = 'PascalScript'
     ScriptText.Strings = (
       'begin'
       ''
       'end.')
-    Left = 152
+    Left = 536
     Top = 8
     Datasets = <
       item
-        DataSet = frxCardList
-        DataSetName = 'frxCardList'
+        DataSet = frxDBCard
+        DataSetName = 'frxDBCard'
       end
       item
-        DataSet = frxPatientDiagnosis
-        DataSetName = 'frxPatientDiagnosis'
+        DataSet = frxDBCardDetails
+        DataSetName = 'frxDBCardDetails'
+      end
+      item
+        DataSet = frxDBCardTitle
+        DataSetName = 'frxDBCardTitle'
       end
       item
         DataSet = frxPatientInfo
         DataSetName = 'frxPatientInfo'
-      end
-      item
-        DataSet = frxPatientPISZ
-        DataSetName = 'frxPatientPISZ'
-      end
-      item
-        DataSet = frxPatientZhaloby
-        DataSetName = 'frxPatientZhaloby'
-      end
-      item
-        DataSet = frxTree
-        DataSetName = 'frxTree'
-      end
-      item
-        DataSet = frxUserDataSet1
-        DataSetName = 'frxUserDataSet1'
       end>
     Variables = <>
     Style = <
@@ -264,7 +239,7 @@ object dmDataModule: TdmDataModule
       ColumnWidth = 95.000000000000000000
       object MasterData1: TfrxMasterData
         FillType = ftBrush
-        Height = 94.488250000000000000
+        Height = 102.047310000000000000
         Top = 510.236550000000000000
         Width = 718.110700000000000000
         AllowSplit = True
@@ -435,7 +410,7 @@ object dmDataModule: TdmDataModule
         Width = 718.110700000000000000
         object Shape3: TfrxShapeView
           Left = 415.748300000000000000
-          Top = 60.472479999999990000
+          Top = 60.472480000000000000
           Width = 298.582870000000000000
           Height = 83.149660000000000000
           GroupIndex = 1
@@ -444,7 +419,7 @@ object dmDataModule: TdmDataModule
           Left = 419.527830000000000000
           Top = 18.897650000000000000
           Width = 287.244280000000000000
-          Height = 34.015770000000010000
+          Height = 34.015770000000000000
           GroupIndex = 1
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
@@ -459,7 +434,7 @@ object dmDataModule: TdmDataModule
         end
         object Memo14: TfrxMemoView
           Left = 419.527830000000000000
-          Top = 60.472479999999990000
+          Top = 60.472480000000000000
           Width = 287.244280000000000000
           Height = 79.370130000000000000
           GroupIndex = 1
@@ -498,7 +473,7 @@ object dmDataModule: TdmDataModule
           ParentFont = False
         end
         object Shape1: TfrxShapeView
-          Top = 60.472479999999990000
+          Top = 60.472480000000000000
           Width = 253.228510000000000000
           Height = 83.149660000000000000
           GroupIndex = 1
@@ -567,199 +542,10 @@ object dmDataModule: TdmDataModule
         end
         object Shape7: TfrxShapeView
           Left = 253.228510000000000000
-          Top = 60.472479999999990000
+          Top = 60.472480000000000000
           Width = 162.519790000000000000
           Height = 83.149660000000000000
           GroupIndex = 1
-        end
-      end
-      object MasterData2: TfrxMasterData
-        FillType = ftBrush
-        Height = 18.897650000000000000
-        Top = 668.976810000000000000
-        Width = 718.110700000000000000
-        AllowSplit = True
-        DataSet = frxPatientDiagnosis
-        DataSetName = 'frxPatientDiagnosis'
-        RowCount = 0
-        object frxPatientDiagnosiscontent: TfrxMemoView
-          Left = 15.118120000000000000
-          Width = 684.094930000000000000
-          Height = 18.897650000000000000
-          DataField = 'content'
-          DataSet = frxPatientDiagnosis
-          DataSetName = 'frxPatientDiagnosis'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Memo.UTF8W = (
-            '[frxPatientDiagnosis."content"]')
-          ParentFont = False
-          Style = 'TimesNewRoman-10'
-        end
-      end
-      object MasterData3: TfrxMasterData
-        FillType = ftBrush
-        Height = 18.897650000000000000
-        Top = 752.126470000000000000
-        Width = 718.110700000000000000
-        AllowSplit = True
-        DataSet = frxPatientZhaloby
-        DataSetName = 'frxPatientZhaloby'
-        RowCount = 0
-        object frxPatientZhalobycontent: TfrxMemoView
-          Left = 15.118120000000000000
-          Width = 684.094930000000000000
-          Height = 18.897650000000000000
-          DataField = 'content'
-          DataSet = frxPatientZhaloby
-          DataSetName = 'frxPatientZhaloby'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Memo.UTF8W = (
-            '[frxPatientZhaloby."content"]')
-          ParentFont = False
-          Style = 'TimesNewRoman-10'
-        end
-      end
-      object Header1: TfrxHeader
-        FillType = ftBrush
-        Height = 18.897650000000000000
-        Top = 627.401980000000000000
-        Width = 718.110700000000000000
-        AllowSplit = True
-        object Memo9: TfrxMemoView
-          Width = 94.488250000000000000
-          Height = 18.897650000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Memo.UTF8W = (
-            #1044#1080#1072#1075#1085#1086#1079)
-          ParentFont = False
-          Style = 'TimesNewRoman-10'
-        end
-      end
-      object Header2: TfrxHeader
-        FillType = ftBrush
-        Height = 18.897650000000000000
-        Top = 710.551640000000000000
-        Width = 718.110700000000000000
-        AllowSplit = True
-        object Memo10: TfrxMemoView
-          Width = 188.976500000000000000
-          Height = 18.897650000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Memo.UTF8W = (
-            #1064#1072#1171#1099#1084#1099' ('#1046#1072#1083#1086#1073#1099')')
-          ParentFont = False
-          Style = 'TimesNewRoman-10'
-        end
-      end
-      object MasterData4: TfrxMasterData
-        FillType = ftBrush
-        Height = 18.897650000000000000
-        Top = 835.276130000000000000
-        Width = 718.110700000000000000
-        AllowSplit = True
-        DataSet = frxPatientPISZ
-        DataSetName = 'frxPatientPISZ'
-        RowCount = 0
-        object frxPatientPISZcontent: TfrxMemoView
-          Left = 15.118120000000000000
-          Width = 684.094930000000000000
-          Height = 18.897650000000000000
-          DataField = 'content'
-          DataSet = frxPatientPISZ
-          DataSetName = 'frxPatientPISZ'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Memo.UTF8W = (
-            '[frxPatientPISZ."content"]')
-          ParentFont = False
-          Style = 'TimesNewRoman-10'
-        end
-      end
-      object Header3: TfrxHeader
-        FillType = ftBrush
-        Height = 18.897650000000000000
-        Top = 793.701300000000000000
-        Width = 718.110700000000000000
-        AllowSplit = True
-        object Memo11: TfrxMemoView
-          Width = 604.724800000000000000
-          Height = 18.897650000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Memo.UTF8W = (
-            
-              #1041#1201#1088#1099#1085' '#1072#1091#1099#1088#1171#1072#1085' '#1078#1241#1085#1077' '#1179#1086#1089#1072#1083#1179#1099' '#1089#1099#1088#1179#1072#1090#1090#1072#1088#1099' ('#1055#1077#1088#1077#1085#1077#1089#1077#1085#1085#1099#1077' '#1080' '#1089#1086#1087#1091#1090#1089#1090#1074#1091#1102 +
-              #1097#1080#1077' '#1079#1072#1073#1086#1083#1077#1074#1072#1085#1080#1103')')
-          ParentFont = False
-          Style = 'TimesNewRoman-10'
-        end
-      end
-      object Header4: TfrxHeader
-        FillType = ftBrush
-        Height = 18.897650000000000000
-        Top = 876.850960000000000000
-        Width = 718.110700000000000000
-        AllowSplit = True
-        object Memo12: TfrxMemoView
-          Width = 604.724800000000000000
-          Height = 18.897650000000000000
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Memo.UTF8W = (
-            #1054#1089#1099' '#1089#1099#1088#1179#1072#1090#1090#1099#1187' '#1076#1072#1084#1091#1099' ('#1056#1072#1079#1074#1080#1090#1080#1077' '#1085#1072#1089#1090#1086#1103#1097#1077#1075#1086' '#1079#1072#1073#1086#1083#1077#1074#1072#1085#1080#1103')')
-          ParentFont = False
-          Style = 'TimesNewRoman-10'
-        end
-      end
-      object MasterData6: TfrxMasterData
-        FillType = ftBrush
-        Height = 18.897650000000000000
-        Top = 918.425790000000000000
-        Width = 718.110700000000000000
-        DataSet = frxUserDataSet1
-        DataSetName = 'frxUserDataSet1'
-        RowCount = 0
-        object frxUserDataSet1field: TfrxMemoView
-          Left = 15.118120000000000000
-          Width = 589.606680000000000000
-          Height = 18.897650000000000000
-          DataField = 'field'
-          DataSet = frxUserDataSet1
-          DataSetName = 'frxUserDataSet1'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -13
-          Font.Name = 'Times New Roman'
-          Font.Style = []
-          Memo.UTF8W = (
-            '[frxUserDataSet1."field"]')
-          ParentFont = False
-          Style = 'TimesNewRoman-10'
         end
       end
       object PageHeader1: TfrxPageHeader
@@ -785,6 +571,58 @@ object dmDataModule: TdmDataModule
           ParentFont = False
         end
       end
+      object MasterData2: TfrxMasterData
+        FillType = ftBrush
+        Height = 18.897650000000000000
+        Top = 676.535870000000000000
+        Width = 718.110700000000000000
+        DataSet = frxDBCardTitle
+        DataSetName = 'frxDBCardTitle'
+        RowCount = 0
+        Stretched = True
+        object frxDBCardTitlecontent: TfrxMemoView
+          Left = 18.897650000000000000
+          Width = 661.417750000000000000
+          Height = 18.897650000000000000
+          StretchMode = smActualHeight
+          DataField = 'content'
+          DataSet = frxDBCardTitle
+          DataSetName = 'frxDBCardTitle'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxDBCardTitle."content"]')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+        end
+      end
+      object GroupHeader2: TfrxGroupHeader
+        FillType = ftBrush
+        Height = 18.897650000000000000
+        Top = 634.961040000000000000
+        Width = 718.110700000000000000
+        Condition = 'frxDBCardTitle."subroot_id"'
+        object frxDBCardTitlesubroot: TfrxMemoView
+          Width = 680.315400000000000000
+          Height = 18.897650000000000000
+          DataField = 'subroot'
+          DataSet = frxDBCardTitle
+          DataSetName = 'frxDBCardTitle'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxDBCardTitle."subroot"]')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+          WordWrap = False
+        end
+      end
     end
     object Page2: TfrxReportPage
       PaperWidth = 210.000000000000000000
@@ -796,14 +634,49 @@ object dmDataModule: TdmDataModule
       BottomMargin = 10.000000000000000000
       object MasterData5: TfrxMasterData
         FillType = ftBrush
-        Height = 22.677180000000000000
-        Top = 18.897650000000000000
+        Height = 45.354360000000000000
+        Top = 102.047310000000000000
         Width = 718.110700000000000000
-        DataSet = frxCardList
-        DataSetName = 'frxCardList'
+        DataSet = frxDBCard
+        DataSetName = 'frxDBCard'
         RowCount = 0
         object Memo19: TfrxMemoView
-          Width = 94.488250000000000000
+          Left = 117.165430000000000000
+          Width = 151.181200000000000000
+          Height = 18.897650000000000000
+          AutoWidth = True
+          DataField = 'created'
+          DataSet = frxDBCard
+          DataSetName = 'frxDBCard'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxDBCard."created"]')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+        end
+        object frxCardListcardlistEmployee: TfrxMemoView
+          Left = 37.795300000000000000
+          Top = 18.897650000000000000
+          Width = 211.653680000000000000
+          Height = 18.897650000000000000
+          DataField = 'name'
+          DataSet = frxDBCard
+          DataSetName = 'frxDBCard'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxDBCard."name"]')
+          ParentFont = False
+        end
+        object Memo9: TfrxMemoView
+          Width = 117.165430000000000000
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
@@ -811,75 +684,447 @@ object dmDataModule: TdmDataModule
           Font.Name = 'Times New Roman'
           Font.Style = []
           Memo.UTF8W = (
-            #1044#1072#1090#1072' '#1087#1088#1080#1077#1084#1072)
+            #1044#1072#1090#1072'/'#1074#1088#1077#1084#1103' '#1087#1088#1080#1077#1084#1072':')
           ParentFont = False
           Style = 'TimesNewRoman-10'
+        end
+        object Memo10: TfrxMemoView
+          Top = 18.897650000000000000
+          Width = 37.795300000000000000
+          Height = 18.897650000000000000
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            #1042#1088#1072#1095':')
+          ParentFont = False
         end
       end
       object DetailData1: TfrxDetailData
         FillType = ftBrush
         Height = 22.677180000000000000
-        Top = 64.252010000000000000
+        Top = 211.653680000000000000
         Width = 718.110700000000000000
-        DataSet = frxTree
-        DataSetName = 'frxTree'
+        DataSet = frxDBCardDetails
+        DataSetName = 'frxDBCardDetails'
         RowCount = 0
+        Stretched = True
+        object Memo20: TfrxMemoView
+          Align = baLeft
+          Left = 71.811070000000000000
+          Width = 714.331170000000000000
+          Height = 18.897650000000000000
+          AutoWidth = True
+          DataField = 'content'
+          DataSet = frxDBCardDetails
+          DataSetName = 'frxDBCardDetails'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxDBCardDetails."content"]')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+        end
+        object frxDBDataset2tooth: TfrxMemoView
+          Align = baLeft
+          Width = 71.811070000000000000
+          Height = 18.897650000000000000
+          AutoWidth = True
+          DataField = 'tooth'
+          DataSet = frxDBCardDetails
+          DataSetName = 'frxDBCardDetails'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          HideZeros = True
+          Memo.UTF8W = (
+            '[frxDBCardDetails."tooth"]')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+          WordWrap = False
+        end
+      end
+      object GroupHeader1: TfrxGroupHeader
+        FillType = ftBrush
+        Height = 18.897650000000000000
+        Top = 170.078850000000000000
+        Width = 718.110700000000000000
+        Condition = 'frxDBCardDetails."root"'
+        object frxDBDataset2root: TfrxMemoView
+          Width = 400.630180000000000000
+          Height = 18.897650000000000000
+          DataField = 'root'
+          DataSet = frxDBCardDetails
+          DataSetName = 'frxDBCardDetails'
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -13
+          Font.Name = 'Times New Roman'
+          Font.Style = []
+          Memo.UTF8W = (
+            '[frxDBCardDetails."root"]')
+          ParentFont = False
+          Style = 'TimesNewRoman-10'
+        end
+      end
+      object PageHeader2: TfrxPageHeader
+        FillType = ftBrush
+        Height = 22.677180000000000000
+        Top = 18.897650000000000000
+        Width = 718.110700000000000000
       end
     end
   end
-  object frxPatientDiagnosis: TfrxUserDataSet
-    UserName = 'frxPatientDiagnosis'
-    OnCheckEOF = frxPatientDiagnosisCheckEOF
-    OnFirst = frxPatientDiagnosisFirst
-    OnNext = frxPatientDiagnosisNext
-    Fields.Strings = (
-      'content')
-    OnGetValue = frxPatientDiagnosisGetValue
-    Left = 264
-    Top = 56
-  end
-  object frxPatientZhaloby: TfrxUserDataSet
-    UserName = 'frxPatientZhaloby'
-    OnCheckEOF = frxPatientZhalobyCheckEOF
-    OnFirst = frxPatientZhalobyFirst
-    OnNext = frxPatientZhalobyNext
-    Fields.Strings = (
-      'content')
-    OnGetValue = frxPatientZhalobyGetValue
-    Left = 264
-    Top = 104
-  end
-  object frxUserDataSet1: TfrxUserDataSet
-    UserName = 'frxUserDataSet1'
-    OnCheckEOF = frxUserDataSet1CheckEOF
-    OnFirst = frxUserDataSet1First
-    OnNext = frxUserDataSet1Next
-    Fields.Strings = (
-      'field')
-    OnGetValue = frxUserDataSet1GetValue
-    Left = 264
-    Top = 200
-  end
-  object frxCardList: TfrxUserDataSet
-    UserName = 'frxCardList'
-    OnCheckEOF = frxUserDataSet1CheckEOF
-    OnFirst = frxUserDataSet1First
-    OnNext = frxUserDataSet1Next
-    Fields.Strings = (
-      'fieldCard')
-    OnGetValue = frxUserDataSet1GetValue
-    Left = 392
+  object LocalDB: TFDConnection
+    Params.Strings = (
+      'Database=C:\git\lkvdent_rest_api\data_tmp.db'
+      'StringFormat=Unicode'
+      'LockingMode=Normal'
+      'DriverID=SQLite')
+    Connected = True
+    LoginPrompt = False
+    AfterConnect = LocalDBAfterConnect
+    BeforeConnect = LocalDBBeforeConnect
+    Left = 128
     Top = 8
   end
-  object frxTree: TfrxUserDataSet
-    UserName = 'frxTree'
-    OnCheckEOF = frxUserDataSet1CheckEOF
-    OnFirst = frxUserDataSet1First
-    OnNext = frxUserDataSet1Next
-    Fields.Strings = (
-      'fieldTree')
-    OnGetValue = frxUserDataSet1GetValue
-    Left = 392
+  object localDropTableCard: TFDQuery
+    Connection = LocalDB
+    SQL.Strings = (
+      'DROP TABLE IF EXISTS [local_CardDetails];'
+      'DROP TABLE IF EXISTS [local_Card];'
+      'DROP TABLE IF EXISTS [local_CardTitle];')
+    Left = 128
     Top = 56
+  end
+  object localCreateTableCard: TFDQuery
+    Connection = LocalDB
+    SQL.Strings = (
+      'CREATE TABLE [local_Card]('
+      '  [id] INTEGER PRIMARY KEY, '
+      '  [name] VARCHAR, '
+      '  [created] DATETIME);'
+      ''
+      'CREATE TABLE [local_CardDetails]('
+      '  [id] INTEGER PRIMARY KEY, '
+      
+        '  [card_id] INTEGER REFERENCES [local_Card]([id]) ON DELETE SET ' +
+        'NULL ON UPDATE SET NULL,'
+      '  [tooth] VARCHAR(255), '
+      '  [content] VARCHAR, '
+      '  [root] VARCHAR);'
+      ''
+      'CREATE TABLE [local_CardTitle]('
+      '  [id] INTEGER PRIMARY KEY, '
+      '  [content] VARCHAR, '
+      '  [subroot_id] INTEGER, '
+      '  [subroot] VARCHAR(255));'
+      ''
+      
+        'CREATE INDEX [index_carddetails_card_id] ON [local_CardDetails](' +
+        '[card_id]);'
+      ''
+      'CREATE INDEX [index_card_id] ON [local_Card]([id]);')
+    Left = 128
+    Top = 104
+  end
+  object localExecSQL: TFDQuery
+    Connection = LocalDB
+    Left = 128
+    Top = 152
+  end
+  object FDGUIxWaitCursor: TFDGUIxWaitCursor
+    Provider = 'Forms'
+    Left = 256
+    Top = 8
+  end
+  object localCard: TFDQuery
+    IndexFieldNames = 'id'
+    Connection = LocalDB
+    SQL.Strings = (
+      'select id, name, created from local_Card')
+    Left = 128
+    Top = 200
+    object localCardid: TIntegerField
+      FieldName = 'id'
+      Origin = 'id'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+    end
+    object localCardname: TWideStringField
+      FieldName = 'name'
+      Origin = 'name'
+      Size = 32767
+    end
+    object localCardcreated: TDateTimeField
+      FieldName = 'created'
+      Origin = 'created'
+    end
+  end
+  object localCardDetails: TFDQuery
+    IndexFieldNames = 'card_id'
+    MasterSource = dsCard
+    MasterFields = 'id'
+    Connection = LocalDB
+    SQL.Strings = (
+      'select * from local_CardDetails')
+    Left = 128
+    Top = 248
+    object localCardDetailsid: TIntegerField
+      FieldName = 'id'
+      Origin = 'id'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+    end
+    object localCardDetailscard_id: TIntegerField
+      FieldName = 'card_id'
+      Origin = 'card_id'
+    end
+    object localCardDetailstooth: TWideStringField
+      FieldName = 'tooth'
+      Origin = 'tooth'
+      Size = 255
+    end
+    object localCardDetailscontent: TWideStringField
+      FieldName = 'content'
+      Origin = 'content'
+      Size = 32767
+    end
+    object localCardDetailsroot: TWideStringField
+      FieldName = 'root'
+      Origin = 'root'
+      Size = 32767
+    end
+  end
+  object frxDBCard: TfrxDBDataset
+    UserName = 'frxDBCard'
+    CloseDataSource = False
+    DataSet = localCard
+    BCDToCurrency = False
+    Left = 368
+    Top = 56
+  end
+  object frxDBCardDetails: TfrxDBDataset
+    UserName = 'frxDBCardDetails'
+    CloseDataSource = False
+    DataSet = localCardDetails
+    BCDToCurrency = False
+    Left = 368
+    Top = 104
+  end
+  object frxReport1: TfrxReport
+    Version = '5.1.5'
+    DotMatrixReport = False
+    IniFile = '\Software\Fast Reports'
+    PreviewOptions.Buttons = [pbPrint, pbLoad, pbSave, pbExport, pbZoom, pbFind, pbOutline, pbPageSetup, pbTools, pbEdit, pbNavigator, pbExportQuick]
+    PreviewOptions.Zoom = 1.000000000000000000
+    PrintOptions.Printer = 'Default'
+    PrintOptions.PrintOnSheet = 0
+    ReportOptions.CreateDate = 43677.146567141200000000
+    ReportOptions.LastChange = 43677.146567141200000000
+    ScriptLanguage = 'PascalScript'
+    ScriptText.Strings = (
+      'begin'
+      ''
+      'end.')
+    Left = 504
+    Top = 240
+    Datasets = <
+      item
+        DataSet = frxDBCardTitle
+        DataSetName = 'frxDBCardTitle'
+      end>
+    Variables = <>
+    Style = <>
+    object Data: TfrxDataPage
+      Height = 1000.000000000000000000
+      Width = 1000.000000000000000000
+    end
+    object Page1: TfrxReportPage
+      PaperWidth = 210.000000000000000000
+      PaperHeight = 297.000000000000000000
+      PaperSize = 9
+      LeftMargin = 10.000000000000000000
+      RightMargin = 10.000000000000000000
+      TopMargin = 10.000000000000000000
+      BottomMargin = 10.000000000000000000
+      object MasterData1: TfrxMasterData
+        FillType = ftBrush
+        Height = 22.677180000000000000
+        Top = 64.252010000000000000
+        Width = 718.110700000000000000
+        DataSet = frxDBCardTitle
+        DataSetName = 'frxDBCardTitle'
+        RowCount = 0
+        object Memo1: TfrxMemoView
+          Left = 15.118120000000000000
+          Width = 400.630180000000000000
+          Height = 18.897650000000000000
+          DataField = 'content'
+          DataSet = frxDBCardTitle
+          DataSetName = 'frxDBCardTitle'
+          Memo.UTF8W = (
+            '[frxDBCardTitle."content"]')
+        end
+      end
+      object GroupHeader1: TfrxGroupHeader
+        FillType = ftBrush
+        Height = 22.677180000000000000
+        Top = 18.897650000000000000
+        Width = 718.110700000000000000
+        Condition = 'frxDBCardTitle."subroot_id"'
+        object frxDBCardTitlesubroot: TfrxMemoView
+          Left = 7.559060000000000000
+          Width = 400.630180000000000000
+          Height = 18.897650000000000000
+          DataField = 'subroot'
+          DataSet = frxDBCardTitle
+          DataSetName = 'frxDBCardTitle'
+          Memo.UTF8W = (
+            '[frxDBCardTitle."subroot"]')
+        end
+      end
+    end
+  end
+  object dsCard: TDataSource
+    DataSet = localCard
+    Left = 32
+    Top = 248
+  end
+  object localCardTitle: TFDQuery
+    Connection = LocalDB
+    SQL.Strings = (
+      'select * from local_CardTitle')
+    Left = 128
+    Top = 296
+    object localCardTitleid: TIntegerField
+      FieldName = 'id'
+      Origin = 'id'
+      ProviderFlags = [pfInUpdate, pfInWhere, pfInKey]
+    end
+    object localCardTitlecontent: TWideStringField
+      FieldName = 'content'
+      Origin = 'content'
+      Size = 32767
+    end
+    object localCardTitlesubroot_id: TIntegerField
+      FieldName = 'subroot_id'
+      Origin = 'subroot_id'
+    end
+    object localCardTitlesubroot: TWideStringField
+      FieldName = 'subroot'
+      Origin = 'subroot'
+      Size = 255
+    end
+  end
+  object frxDBCardTitle: TfrxDBDataset
+    UserName = 'frxDBCardTitle'
+    CloseDataSource = False
+    DataSet = localCardTitle
+    BCDToCurrency = False
+    Left = 368
+    Top = 152
+  end
+  object frxPDFExport1: TfrxPDFExport
+    UseFileCache = True
+    ShowProgress = True
+    OverwritePrompt = False
+    DataOnly = False
+    PrintOptimized = False
+    Outline = False
+    Background = False
+    HTMLTags = True
+    Quality = 95
+    Transparency = False
+    Author = 'FastReport'
+    Subject = 'FastReport PDF export'
+    ProtectionFlags = [eModify, eAnnot]
+    HideToolbar = False
+    HideMenubar = False
+    HideWindowUI = False
+    FitWindow = False
+    CenterWindow = False
+    PrintScaling = False
+    PdfA = False
+    Left = 536
+    Top = 56
+  end
+  object localCreateTableTree: TFDQuery
+    Connection = LocalDB
+    SQL.Strings = (
+      'CREATE TABLE [local_Tree]('
+      '  [id] INTEGER PRIMARY KEY AUTOINCREMENT, '
+      '  [update_id] INTEGER, '
+      '  [parent_id] INTEGER, '
+      '  [content] VARCHAR, '
+      '  [is_init_exam] TINYINT(1) NOT NULL DEFAULT 0, '
+      '  [is_enable] TINYINT(1) NOT NULL DEFAULT 1, '
+      '  [metod] VARCHAR(4) NOT NULL);')
+    Left = 256
+    Top = 104
+  end
+  object localDropTableTree: TFDQuery
+    Connection = LocalDB
+    SQL.Strings = (
+      'DROP TABLE [local_Tree];')
+    Left = 256
+    Top = 56
+  end
+  object localTree: TFDQuery
+    Connection = LocalDB
+    SQL.Strings = (
+      'select * from local_Tree')
+    Left = 256
+    Top = 200
+    object localTreeid: TFDAutoIncField
+      FieldName = 'id'
+      Origin = 'id'
+      ProviderFlags = [pfInWhere, pfInKey]
+      ReadOnly = True
+    end
+    object localTreeupdate_id: TIntegerField
+      FieldName = 'update_id'
+      Origin = 'update_id'
+    end
+    object localTreeparent_id: TIntegerField
+      FieldName = 'parent_id'
+      Origin = 'parent_id'
+    end
+    object localTreecontent: TWideStringField
+      FieldName = 'content'
+      Origin = 'content'
+      Size = 32767
+    end
+    object localTreeis_init_exam: TShortintField
+      FieldName = 'is_init_exam'
+      Origin = 'is_init_exam'
+      Required = True
+    end
+    object localTreeis_enable: TShortintField
+      FieldName = 'is_enable'
+      Origin = 'is_enable'
+      Required = True
+    end
+    object localTreemetod: TWideStringField
+      FieldName = 'metod'
+      Origin = 'metod'
+      Required = True
+      Size = 4
+    end
+  end
+  object RESTRequest2: TRESTRequest
+    Client = RESTClient1
+    Params = <>
+    Resource = 'tree'
+    Response = RESTResponse1
+    OnAfterExecute = RESTRequest1AfterExecute
+    SynchronizedEvents = False
+    Left = 32
+    Top = 312
   end
 end
