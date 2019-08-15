@@ -1138,6 +1138,28 @@ begin
       JSONString := RESTRequest(rmPOST, 'tree', RequestParams);
       localTree.Next;
       end; }
+    for i := 0 to Count - 1 do
+    begin
+      RESTRequest2.Params.Clear;
+      s := localTreecontent.Value;
+
+      UnicodeStr := s;
+      TempString := UTF8Encode(UnicodeStr);
+      SetLength(UTF8Str, Length(TempString));
+      Move(TempString[1], UTF8Str[1], Length(UTF8Str));
+      ResultString := UTF8Str;
+
+      RESTRequest2.Params.AddItem(JSON_PARENT_ID,
+        UTF8EncodeToShortString(IntToStr(localTreeparent_id.Value)), pkGETorPOST,
+        [poDoNotEncode]);
+      RESTRequest2.Params.AddItem(JSON_CONTENT, ResultString, pkGETorPOST,
+        [poDoNotEncode]);
+      RESTRequest2.Params.AddItem(JSON_IS_ENABLE,
+        UTF8EncodeToShortString(IntToStr(localTreeis_enable.Value)), pkGETorPOST,
+        [poDoNotEncode]);
+      JSONString := RESTRequest(rmPOST, 'tree', RESTRequest2.Params);
+      localTree.Next;
+    end;
 
     localTree.Close;
     localTree.SQL.Clear;
@@ -1153,9 +1175,6 @@ begin
     begin
       RESTRequest2.Params.Clear;
       s := localTreecontent.Value;
-      // UTF8Str := UTF8Encode(s);
-      // SetCodePage(UTF8Str, 0, false);
-      // UnicodeStr := UTF8Str;
 
       UnicodeStr := s;
       TempString := UTF8Encode(UnicodeStr);
@@ -1171,28 +1190,7 @@ begin
       JSONString := RESTRequest(rmPUT, 'tree/' + IntToStr(localTreeupdate_id.Value),
         RESTRequest2.Params);
       localTree.Next;
-
-      { RequestParams.Clear;
-        s := localTreecontent.Value;
-        // UTF8Str := UTF8Encode(s);
-        // SetCodePage(UTF8Str, 0, false);
-        // UnicodeStr := UTF8Str;
-
-        UnicodeStr := s;
-        TempString := UTF8Encode(UnicodeStr);
-        SetLength(UTF8Str, Length(TempString));
-        Move(TempString[1], UTF8Str[1], Length(UTF8Str));
-        ResultString := UTF8Str;
-
-        RequestParams.AddItem(JSON_CONTENT, ResultString, pkGETorPOST, [poDoNotEncode]);
-        RequestParams.AddItem(JSON_IS_ENABLE,
-        UTF8EncodeToShortString(IntToStr(localTreeis_enable.Value)), pkGETorPOST,
-        [poDoNotEncode]);
-        JSONString := RESTRequest(rmPUT, 'tree/' + IntToStr(localTreeupdate_id.Value),
-        RequestParams);
-        localTree.Next; }
     end;
-    // RequestParams.Free;
   end;
 end;
 

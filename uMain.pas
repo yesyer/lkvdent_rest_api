@@ -246,6 +246,7 @@ var
   glFlagInsertCard: Boolean; // флаг, добавить/редактировть карточку true/false
   // ADiagnosis, AZhaloby, APISZ, ARNZ: TStrings;
   ACardTreeDelete: TStrings;
+
   // ACardList, ACardTree: TStrings;
 
   // glModifyClient: Boolean; // true - append, false - modify
@@ -993,11 +994,6 @@ end;
 
 // TODO успешно/ошибка при сохранении записи
 procedure TfmMain.buttonNodeSaveClick(Sender: TObject);
-// var
-// OriginalJSONObject: TJSONObject;
-// JSONString: String;
-// RequestParams: TRESTRequestParameterList;
-// i: Integer;
 begin
   buttonNodeSave.Enabled := false;
 
@@ -1136,6 +1132,8 @@ end;
 
 procedure TfmMain.FormCreate(Sender: TObject);
 begin
+
+
   ACardTreeDelete := TStringList.Create;
   treeNodeRootSetting.NodesAppearance.HeightMode := tnhmVariable;
   treeNodeSetting.NodesAppearance.HeightMode := tnhmVariable;

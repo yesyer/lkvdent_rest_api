@@ -64,9 +64,9 @@ type
     RESTRequest2: TRESTRequest;
     procedure RESTRequest1AfterExecute(Sender: TCustomRESTRequest);
     procedure frxPatientInfoGetValue(const VarName: string; var Value: Variant);
-    procedure frxCardListCheckEOF(Sender: TObject; var Eof: Boolean);
     procedure LocalDBAfterConnect(Sender: TObject);
     procedure LocalDBBeforeConnect(Sender: TObject);
+    procedure DataModuleCreate(Sender: TObject);
 
   private
     { Private declarations }
@@ -85,12 +85,19 @@ uses uMain;
 
 {$R *.dfm}
 
-procedure TdmDataModule.frxCardListCheckEOF(Sender: TObject; var Eof: Boolean);
+procedure TdmDataModule.DataModuleCreate(Sender: TObject);
 begin
-  {if intCL = ACardList.Count then
-    Eof := true
-  else
-    Eof := false;}
+  try
+    dmDataModule.LocalDB.Connected := false;
+    dmDataModule.LocalDB.Params.Database := ExtractFileDir(ParamStr(0)) + '\data_tmp.db';
+    dmDataModule.LocalDB.Connected := true;
+
+  except
+    fmMain.logger(rmPATCH, 'Локальная БД', 'Ошибка подключение к файлу: ' +
+      dmDataModule.LocalDB.Params.Database);
+    raise Exception.Create('Ошибка подключение локальной БД');
+  end;
+  fmMain.logger(rmPATCH, 'Локальная БД', dmDataModule.LocalDB.Params.Database);
 end;
 
 procedure TdmDataModule.frxPatientInfoGetValue(const VarName: string; var Value: Variant);
@@ -116,17 +123,17 @@ end;
 
 procedure TdmDataModule.LocalDBAfterConnect(Sender: TObject);
 begin
-  fmMain.logger(rmPATCH,'Локальная БД','Подключено');
+  fmMain.logger(rmPATCH, 'Локальная БД', 'Подключено');
 end;
 
 procedure TdmDataModule.LocalDBBeforeConnect(Sender: TObject);
 begin
-  fmMain.logger(rmPATCH,'Локальная БД','Подключение...');
+  fmMain.logger(rmPATCH, 'Локальная БД', 'Подключение...');
 end;
 
 procedure TdmDataModule.RESTRequest1AfterExecute(Sender: TCustomRESTRequest);
 begin
-  //fmMain.logger(RESTRequest1.Method, RESTRequest1.Resource, 'ok');
+  // fmMain.logger(RESTRequest1.Method, RESTRequest1.Resource, 'ok');
 end;
 
 end.

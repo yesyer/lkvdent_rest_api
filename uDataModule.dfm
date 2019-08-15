@@ -1,5 +1,6 @@
 object dmDataModule: TdmDataModule
   OldCreateOrder = False
+  OnCreate = DataModuleCreate
   Height = 448
   Width = 799
   object RESTClient1: TRESTClient
@@ -29,7 +30,7 @@ object dmDataModule: TdmDataModule
     Left = 30
     Top = 152
     Bitmap = {
-      494C010101000800640010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C0101010008006C0010001000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000400000001000000001002000000000000010
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -784,11 +785,9 @@ object dmDataModule: TdmDataModule
   end
   object LocalDB: TFDConnection
     Params.Strings = (
-      'Database=C:\git\lkvdent_rest_api\data_tmp.db'
       'StringFormat=Unicode'
       'LockingMode=Normal'
       'DriverID=SQLite')
-    Connected = True
     LoginPrompt = False
     AfterConnect = LocalDBAfterConnect
     BeforeConnect = LocalDBBeforeConnect
@@ -1071,7 +1070,7 @@ object dmDataModule: TdmDataModule
   object localDropTableTree: TFDQuery
     Connection = LocalDB
     SQL.Strings = (
-      'DROP TABLE [local_Tree];')
+      'DROP TABLE IF EXISTS [local_Tree];')
     Left = 256
     Top = 56
   end

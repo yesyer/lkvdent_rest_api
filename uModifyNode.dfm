@@ -3,8 +3,8 @@ object fmModifyData: TfmModifyData
   Top = 0
   BorderStyle = bsDialog
   Caption = #1056#1077#1076#1072#1082#1090#1080#1088#1086#1074#1072#1085#1080#1077' '#1091#1079#1083#1072
-  ClientHeight = 146
-  ClientWidth = 411
+  ClientHeight = 123
+  ClientWidth = 409
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -48,15 +48,16 @@ object fmModifyData: TfmModifyData
   end
   object Panel1: TPanel
     Left = 0
-    Top = 105
-    Width = 411
+    Top = 82
+    Width = 409
     Height = 41
     Align = alBottom
     BevelOuter = bvLowered
     Caption = 'Panel1'
     ShowCaption = False
     TabOrder = 3
-    ExplicitTop = 119
+    ExplicitTop = 105
+    ExplicitWidth = 411
     object buttonOk: TButton
       Left = 245
       Top = 8
